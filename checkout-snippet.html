@@ -1,0 +1,358 @@
+<!-- 
+  SNIPPET DE CHECKOUT COM VOUCHER
+  Adicione este código na sua página de pricing (ex: pricing.html ou index.html)
+  onde os usuários escolhem o plano
+-->
+
+<style>
+.checkout-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.checkout-modal.active {
+    display: flex;
+}
+
+.checkout-content {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.checkout-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.checkout-header h2 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.checkout-price {
+    font-size: 48px;
+    font-weight: bold;
+    color: #333;
+}
+
+.checkout-price .original {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 32px;
+}
+
+.checkout-price .discounted {
+    color: #51cf66;
+}
+
+.voucher-input-group {
+    margin: 20px 0;
+}
+
+.voucher-input-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.voucher-input-group button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: #f1f3f5;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.voucher-input-group button:hover {
+    background: #e0e0e0;
+}
+
+.voucher-message {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.voucher-message.success {
+    background: #d3f9d8;
+    color: #2b8a3e;
+}
+
+.voucher-message.error {
+    background: #ffe3e3;
+    color: #c92a2a;
+}
+
+.checkout-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.checkout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.checkout-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.close-modal {
+    background: #f1f3f5;
+    border: none;
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+</style>
+
+<!-- Modal de Checkout -->
+<div id="checkoutModal" class="checkout-modal">
+    <div class="checkout-content">
+        <div class="checkout-header">
+            <h2 id="modalPlanName">BeautyBot Essencial</h2>
+            <div class="checkout-price">
+                <span class="original" id="originalPrice" style="display: none;"></span>
+                <span id="finalPrice">€97</span>
+                <span style="font-size: 20px; color: #666;">/mês</span>
+            </div>
+        </div>
+
+        <div class="voucher-input-group">
+            <input 
+                type="text" 
+                id="voucherInput" 
+                placeholder="Tem um código de desconto? Digite aqui"
+                maxlength="50"
+            >
+            <button onclick="validateVoucher()">Aplicar Cupom</button>
+            <div id="voucherMessage"></div>
+        </div>
+
+        <button class="checkout-btn" id="checkoutBtn" onclick="proceedToCheckout()">
+            🚀 Continuar para Pagamento
+        </button>
+        <button class="close-modal" onclick="closeCheckoutModal()">Cancelar</button>
+    </div>
+</div>
+
+<script>
+// Configuração
+const SUPABASE_URL = 'https://cdhtcfvvxktouvusyosu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMDA2MTQsImV4cCI6MjA5MjU3NjYxNH0.lfW19Z_N-eF1DiLcQF8E_jAdU0Fiq2NbQxLYnC0gPWo';
+
+const PLAN_PRICES = {
+    essential: 97,
+    premium: 197
+};
+
+let selectedPlan = null;
+let appliedVoucher = null;
+
+// Abrir modal de checkout
+function openCheckoutModal(planType) {
+    selectedPlan = planType;
+    appliedVoucher = null;
+    
+    const modal = document.getElementById('checkoutModal');
+    const planName = planType === 'essential' ? 'BeautyBot Essencial' : 'BeautyBot Premium';
+    const price = PLAN_PRICES[planType];
+    
+    document.getElementById('modalPlanName').textContent = planName;
+    document.getElementById('finalPrice').textContent = `€${price}`;
+    document.getElementById('originalPrice').style.display = 'none';
+    document.getElementById('voucherInput').value = '';
+    document.getElementById('voucherMessage').innerHTML = '';
+    
+    modal.classList.add('active');
+}
+
+// Fechar modal
+function closeCheckoutModal() {
+    document.getElementById('checkoutModal').classList.remove('active');
+}
+
+// Validar voucher
+async function validateVoucher() {
+    const voucherCode = document.getElementById('voucherInput').value.trim().toUpperCase();
+    
+    if (!voucherCode) {
+        showVoucherMessage('Por favor, insira um código de voucher', 'error');
+        return;
+    }
+
+    try {
+        // Obter sessão do usuário
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            showVoucherMessage('Você precisa estar logado para usar um voucher', 'error');
+            return;
+        }
+
+        // Validar voucher na API
+        const response = await fetch(`/api/vouchers?code=${voucherCode}`, {
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showVoucherMessage(data.error || 'Voucher inválido', 'error');
+            appliedVoucher = null;
+            resetPrice();
+            return;
+        }
+
+        // Verificar se voucher é aplicável ao plano selecionado
+        if (!data.voucher.applicable_plans.includes(selectedPlan)) {
+            showVoucherMessage('Este voucher não é aplicável ao plano selecionado', 'error');
+            appliedVoucher = null;
+            resetPrice();
+            return;
+        }
+
+        // Aplicar desconto
+        appliedVoucher = data.voucher;
+        applyDiscount(data.voucher);
+        
+        const discountText = data.voucher.discount_type === 'percentage' 
+            ? `${data.voucher.discount_value}%`
+            : `€${data.voucher.discount_value}`;
+        
+        showVoucherMessage(`✨ Voucher aplicado! Desconto de ${discountText}`, 'success');
+
+    } catch (error) {
+        console.error('Erro ao validar voucher:', error);
+        showVoucherMessage('Erro ao validar voucher. Tente novamente.', 'error');
+        appliedVoucher = null;
+        resetPrice();
+    }
+}
+
+// Aplicar desconto visual
+function applyDiscount(voucher) {
+    const originalPrice = PLAN_PRICES[selectedPlan];
+    let finalPrice;
+
+    if (voucher.discount_type === 'percentage') {
+        finalPrice = originalPrice * (1 - voucher.discount_value / 100);
+    } else {
+        finalPrice = Math.max(0, originalPrice - voucher.discount_value);
+    }
+
+    document.getElementById('originalPrice').textContent = `€${originalPrice}`;
+    document.getElementById('originalPrice').style.display = 'inline';
+    document.getElementById('finalPrice').textContent = `€${finalPrice.toFixed(2)}`;
+    document.getElementById('finalPrice').classList.add('discounted');
+}
+
+// Resetar preço
+function resetPrice() {
+    const originalPrice = PLAN_PRICES[selectedPlan];
+    document.getElementById('originalPrice').style.display = 'none';
+    document.getElementById('finalPrice').textContent = `€${originalPrice}`;
+    document.getElementById('finalPrice').classList.remove('discounted');
+}
+
+// Mostrar mensagem de voucher
+function showVoucherMessage(message, type) {
+    const messageDiv = document.getElementById('voucherMessage');
+    messageDiv.innerHTML = `<div class="voucher-message ${type}">${message}</div>`;
+}
+
+// Prosseguir para checkout
+async function proceedToCheckout() {
+    const btn = document.getElementById('checkoutBtn');
+    btn.disabled = true;
+    btn.textContent = 'Processando...';
+
+    try {
+        // Obter sessão do usuário
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            alert('Você precisa estar logado para continuar');
+            window.location.href = '/login.html';
+            return;
+        }
+
+        // Criar checkout session
+        const response = await fetch('/api/stripe-checkout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+                planType: selectedPlan,
+                voucherCode: appliedVoucher?.code || null,
+                userId: session.user.id
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao criar checkout');
+        }
+
+        // Redirecionar para Stripe Checkout
+        window.location.href = data.url;
+
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao processar pagamento: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = '🚀 Continuar para Pagamento';
+    }
+}
+
+/* 
+  COMO USAR:
+  
+  Nos seus botões de escolha de plano, adicione:
+  
+  <button onclick="openCheckoutModal('essential')">
+    Escolher Plano Essencial
+  </button>
+  
+  <button onclick="openCheckoutModal('premium')">
+    Escolher Plano Premium
+  </button>
+*/
+</script>

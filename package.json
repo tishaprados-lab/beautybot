@@ -1,0 +1,18 @@
+{
+  "name": "beautybot",
+  "version": "1.0.0",
+  "description": "SaaS de chatbot IA para clínicas de estética",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "vercel build",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "stripe": "^14.10.0",
+    "micro": "^10.0.1"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.29.0"
+  }
+}
