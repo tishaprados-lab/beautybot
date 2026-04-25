@@ -70,6 +70,25 @@
 </style>
 </head>
 <body>
+
+<!-- SUPABASE AUTH CHECK — só bloqueia se não for embed -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async () => {
+  // Se for acedido como embed (iframe), não redireciona
+  const isEmbed = window.self !== window.top;
+  if (isEmbed) return;
+  
+  const SUPA_URL = 'https://cdhtcfvvxktouvusyosu.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMTE1MTAsImV4cCI6MjA5MjY4NzUxMH0.pf7uOp1fJJzCKYIarr1qF5uQ_iA1Rjh2XtWQYOTm-xk';
+  const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    window.location.href = '/login.html';
+  }
+})();
+</script>
+
 <div id="chat-widget">
   <div id="chat-header">
     <div id="chat-avatar">🌸</div>

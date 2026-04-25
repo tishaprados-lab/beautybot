@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrar — BeautyBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --rose: #c4737f; --rose-dark: #a85a65; --rose-pale: #fdf0f2;
+  --lilac: #b89fce; --nude: #f5ede4; --nude-soft: #f2e8de;
+  --text: #1a1014; --muted: #8a7078; --white: #fff;
+  --grad: linear-gradient(135deg, #c4737f 0%, #b89fce 100%);
+  --sans: 'Outfit', sans-serif; --display: 'Syne', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: var(--sans); }
+
+body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+  background: var(--white);
+}
+
+/* LEFT — brand panel */
+.brand-panel {
+  background: var(--grad);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.brand-panel::before {
+  content: '';
+  position: absolute;
+  width: 400px; height: 400px;
+  background: rgba(255,255,255,.08);
+  border-radius: 50%;
+  top: -100px; right: -100px;
+}
+.brand-panel::after {
+  content: '';
+  position: absolute;
+  width: 300px; height: 300px;
+  background: rgba(255,255,255,.05);
+  border-radius: 50%;
+  bottom: -80px; left: -80px;
+}
+.brand-logo {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 48px;
+  z-index: 1;
+}
+.brand-logo-mark {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,.25);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.brand-tagline {
+  font-family: var(--display);
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 800;
+  color: white;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 24px;
+  z-index: 1;
+  text-align: center;
+}
+.brand-sub {
+  font-size: 16px;
+  color: rgba(255,255,255,.75);
+  line-height: 1.7;
+  text-align: center;
+  max-width: 320px;
+  z-index: 1;
+}
+.brand-stats {
+  display: flex;
+  gap: 32px;
+  margin-top: 48px;
+  z-index: 1;
+}
+.stat { text-align: center; }
+.stat-num {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+}
+.stat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,.65);
+  margin-top: 2px;
+}
+
+/* RIGHT — form panel */
+.form-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 48px;
+  background: var(--white);
+}
+.form-box {
+  width: 100%;
+  max-width: 400px;
+}
+.form-title {
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.form-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 36px;
+  line-height: 1.6;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: var(--nude-soft);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  background: none;
+  border-radius: 9px;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+}
+.tab-btn.active {
+  background: white;
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,.1);
+}
+
+/* Social buttons */
+.social-btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(0,0,0,.12);
+  background: white;
+  font-family: var(--display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  width: 100%;
+}
+.social-btn:hover { background: var(--nude); border-color: var(--rose); }
+.social-btn svg { width: 20px; height: 20px; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(0,0,0,.1);
+}
+
+/* Form fields */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+  font-family: var(--display);
+}
+.form-input {
+  width: 100%;
+  border: 1.5px solid rgba(0,0,0,.12);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text);
+  background: white;
+  outline: none;
+  transition: border-color .2s;
+}
+.form-input:focus { border-color: var(--rose); }
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: var(--grad);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  margin-top: 4px;
+}
+.btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+.form-link {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 20px;
+}
+.form-link a { color: var(--rose); font-weight: 600; text-decoration: none; }
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: none;
+}
+.alert.error { background: #fde8e8; color: #c62828; border: 1px solid #f5c0c0; }
+.alert.success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.alert.show { display: block; }
+
+/* Forgot password link */
+.forgot-link {
+  text-align: right;
+  font-size: 12px;
+  margin-top: -10px;
+  margin-bottom: 16px;
+}
+.forgot-link a { color: var(--rose); text-decoration: none; font-weight: 500; }
+
+/* Mobile */
+@media (max-width: 768px) {
+  body { grid-template-columns: 1fr; }
+  .brand-panel { display: none; }
+  .form-panel { padding: 40px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- PAINEL ESQUERDO — Marca -->
+<div class="brand-panel">
+  <div class="brand-logo">
+    <span class="brand-logo-mark">B</span>
+    BeautyBot
+  </div>
+  <h1 class="brand-tagline">A IA que converte conversas em marcações.</h1>
+  <p class="brand-sub">Mais de 200 clínicas já automatizaram o atendimento e aumentaram as marcações com o BeautyBot.</p>
+  <div class="brand-stats">
+    <div class="stat"><div class="stat-num">+67%</div><div class="stat-label">Mais marcações</div></div>
+    <div class="stat"><div class="stat-num">97%</div><div class="stat-label">Respostas auto</div></div>
+    <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Atendimento</div></div>
+  </div>
+</div>
+
+<!-- PAINEL DIREITO — Formulário -->
+<div class="form-panel">
+  <div class="form-box">
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">Entrar</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Criar conta</button>
+    </div>
+
+    <div id="alert" class="alert"></div>
+
+    <!-- Botões sociais -->
+    <div class="social-btns">
+      <button class="social-btn" onclick="loginGoogle()">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continuar com Google
+      </button>
+    </div>
+
+    <div class="divider">ou com email</div>
+
+    <!-- LOGIN -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="login-email" placeholder="email@suaclinica.pt" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Palavra-passe</label>
+        <input class="form-input" type="password" id="login-password" placeholder="A tua palavra-passe" onkeydown="if(event.key==='Enter')loginEmail()" />
+      </div>
+      <div class="forgot-link"><a href="#" onclick="forgotPassword()">Esqueci a palavra-passe</a></div>
+      <button class="btn-primary" id="btn-login" onclick="loginEmail()">Entrar →</button>
+      <div class="form-link">Não tens conta? <a href="#" onclick="switchTab('signup')">Cria uma grátis</a></div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="form-signup" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Nome da clínica</label>
+        <input class="form-input" type="text" id="signup-clinic" placeholder="Ex: Lumière Spa" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">O teu nome</label>
+        <input class="form-input" type="text" id="signup-name" placeholder="Ex: Dra. Mariana Fonseca" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" id="signup-email" placeholder="email@suaclinica.pt" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Palavra-passe</label>
+        <input class="form-input" type="password" id="signup-password" placeholder="Mínimo 8 caracteres" onkeydown="if(event.key==='Enter')signupEmail()" />
+      </div>
+      <button class="btn-primary" id="btn-signup" onclick="signupEmail()">Criar conta grátis — 14 dias →</button>
+      <div class="form-link" style="font-size:11px;color:var(--muted);margin-top:12px">
+        Ao criar conta aceitas os <a href="/terms.html">Termos</a> e <a href="/privacy.html">Privacidade</a>
+      </div>
+      <div class="form-link">Já tens conta? <a href="#" onclick="switchTab('login')">Entrar</a></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── CONFIG ──
+const SUPABASE_URL = 'https://cdhtcfvvxktouvusyosu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMTE1MTAsImV4cCI6MjA5MjY4NzUxMH0.pf7uOp1fJJzCKYIarr1qF5uQ_iA1Rjh2XtWQYOTm-xk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── VERIFICAR SESSÃO ──
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    // Já autenticado — redireciona
+    await redirectAfterLogin(session);
+  }
+  
+  // Trata callback OAuth (Google redirect)
+  const hash = window.location.hash;
+  if (hash.includes('access_token') || window.location.search.includes('code=')) {
+    const { data: { session: s } } = await sb.auth.getSession();
+    if (s) await redirectAfterLogin(s);
+  }
+})();
+
+async function redirectAfterLogin(session) {
+  // Verifica se é admin
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('role, plan_status')
+    .eq('id', session.user.id)
+    .single();
+
+  if (profile?.role === 'admin') {
+    window.location.href = '/admin.html';
+  } else {
+    window.location.href = '/dashboard.html';
+  }
+}
+
+// ── UI ──
+function showAlert(msg, type = 'error') {
+  const el = document.getElementById('alert');
+  el.textContent = msg;
+  el.className = `alert ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.textContent = loading ? 'A processar...' : (btnId === 'btn-login' ? 'Entrar →' : 'Criar conta grátis — 14 dias →');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='signup')));
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('alert').classList.remove('show');
+}
+
+// ── LOGIN GOOGLE ──
+async function loginGoogle() {
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin + '/login.html'
+    }
+  });
+  if (error) showAlert('Erro ao conectar com Google: ' + error.message);
+}
+
+// ── LOGIN EMAIL ──
+async function loginEmail() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return showAlert('Preenche email e palavra-passe');
+
+  setLoading('btn-login', true);
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  setLoading('btn-login', false);
+
+  if (error) {
+    const msgs = {
+      'Invalid login credentials': 'Email ou palavra-passe incorrectos',
+      'Email not confirmed': 'Confirma o teu email antes de entrar'
+    };
+    return showAlert(msgs[error.message] || error.message);
+  }
+  await redirectAfterLogin(data.session);
+}
+
+// ── SIGNUP EMAIL ──
+async function signupEmail() {
+  const clinic = document.getElementById('signup-clinic').value.trim();
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+
+  if (!clinic || !name || !email || !password) return showAlert('Preenche todos os campos');
+  if (password.length < 8) return showAlert('A palavra-passe deve ter pelo menos 8 caracteres');
+
+  setLoading('btn-signup', true);
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: name, clinic_name: clinic },
+      emailRedirectTo: window.location.origin + '/login.html'
+    }
+  });
+  setLoading('btn-signup', false);
+
+  if (error) return showAlert(error.message);
+
+  if (data.user && !data.session) {
+    showAlert('✅ Confirma o teu email para activar a conta!', 'success');
+  } else if (data.session) {
+    await redirectAfterLogin(data.session);
+  }
+}
+
+// ── FORGOT PASSWORD ──
+async function forgotPassword() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) return showAlert('Escreve o teu email no campo acima');
+  
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset-password.html'
+  });
+  if (error) return showAlert(error.message);
+  showAlert('✅ Email enviado! Verifica a tua caixa de entrada.', 'success');
+}
+</script>
+</body>
+</html>

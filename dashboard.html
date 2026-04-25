@@ -136,6 +136,45 @@
 </style>
 </head>
 <body>
+
+<!-- SUPABASE AUTH GUARD -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(async () => {
+  const SUPA_URL = 'https://cdhtcfvvxktouvusyosu.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMTE1MTAsImV4cCI6MjA5MjY4NzUxMH0.pf7uOp1fJJzCKYIarr1qF5uQ_iA1Rjh2XtWQYOTm-xk';
+  const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    window.location.href = '/login.html';
+  } else {
+    window._supabaseSession = session;
+    window._supabase = sb;
+    // Carrega os dados guardados na BD para este utilizador
+    const { data: profile } = await sb.from('profiles').select('chatbot_config, plan_status, trial_ends_at').eq('id', session.user.id).single();
+    if (profile) {
+      // Verifica trial
+      if (profile.plan_status === 'trial' && profile.trial_ends_at) {
+        const trialEnd = new Date(profile.trial_ends_at);
+        if (trialEnd < new Date()) {
+          // Trial expirado — mostra aviso mas não bloqueia ainda
+          setTimeout(() => {
+            const banner = document.createElement('div');
+            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:white;text-align:center;padding:12px;font-size:14px;font-weight:600;z-index:9999';
+            banner.innerHTML = '⚠️ O teu trial de 14 dias expirou. <a href="/signup.html#upgrade" style="color:white;text-decoration:underline;margin-left:8px">Escolher um plano →</a>';
+            document.body.prepend(banner);
+          }, 500);
+        }
+      }
+      // Carrega config guardada na BD
+      if (profile.chatbot_config && Object.keys(profile.chatbot_config).length > 0) {
+        localStorage.setItem('beautybot_config', JSON.stringify(profile.chatbot_config));
+      }
+    }
+  }
+})();
+</script>
+
 <div id="sidebar">
   <div id="sidebar-logo"><h1>BeautyBot</h1><p>Painel de Configuração</p></div>
   <nav>
@@ -150,6 +189,7 @@
     <a class="nav-item" href="index.html" style="text-decoration:none"><span class="nav-icon">🏠</span> Página Inicial</a>
   </nav>
   <div id="sidebar-footer">
+    <a class="nav-item" href="#" onclick="logoutUser()" style="text-decoration:none;color:rgba(255,255,255,.5)"><span class="nav-icon">⬡</span> Sair</a>
     <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
       <button onclick="exportarDados()" style="background:rgba(232,197,160,0.15);border:1px solid rgba(232,197,160,0.3);color:var(--sidebar-active);border-radius:6px;padding:7px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;text-align:left">💾 Exportar dados</button>
       <label style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:6px;padding:7px 10px;font-size:11px;cursor:pointer;width:100%;text-align:left;display:block">
@@ -836,6 +876,9 @@ function salvarTudo(){
   lerFormulario();
   localStorage.setItem('beautybot_config',JSON.stringify(config));
 
+  // Guarda também na base de dados Supabase
+  salvarNaBD(config);
+
   // Faz backup automático sempre que guarda
   fazerBackupAutomatico();
 
@@ -992,6 +1035,11 @@ Desejas restaurar?`)) {
   } catch(e) {
     console.warn('Verificação de migração falhou:', e);
   }
+}
+
+function logoutUser() {
+  if (window._supabase) { window._supabase.auth.signOut().then(() => window.location.href = '/login.html'); }
+  else { window.location.href = '/login.html'; }
 }
 
 window.onload=function(){

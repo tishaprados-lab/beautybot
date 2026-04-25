@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — BeautyBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --rose: #c4737f; --rose-dark: #a85a65; --rose-pale: #fdf0f2;
+  --lilac: #b89fce; --green: #4caf7d; --green-pale: #e8f5ee;
+  --amber: #f59e0b; --amber-pale: #fef3c7;
+  --red: #ef4444; --red-pale: #fef2f2;
+  --text: #1a1014; --muted: #8a7078; --border: rgba(0,0,0,.08);
+  --bg: #faf9f7; --card: #fff;
+  --sidebar: #1a1014; --sidebar-text: rgba(255,255,255,.7); --sidebar-active: #c4737f;
+  --grad: linear-gradient(135deg, #c4737f 0%, #b89fce 100%);
+  --sans: 'Outfit', sans-serif; --display: 'Syne', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+#sidebar {
+  width: 240px; background: var(--sidebar); flex-shrink: 0;
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
+}
+.sidebar-logo {
+  padding: 20px;
+  font-family: var(--display); font-size: 18px; font-weight: 800;
+  color: white; display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.sidebar-logo-mark {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--grad); display: flex; align-items: center;
+  justify-content: center; font-size: 13px; color: white;
+}
+.sidebar-section { padding: 12px 10px 4px; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.3); }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; margin: 2px 8px; border-radius: 8px;
+  font-size: 13.5px; font-weight: 500; color: var(--sidebar-text);
+  cursor: pointer; border: none; background: none; width: calc(100% - 16px);
+  text-decoration: none; text-align: left; transition: all .15s;
+}
+.nav-item:hover { background: rgba(255,255,255,.06); color: white; }
+.nav-item.active { background: rgba(196,115,127,.15); color: var(--sidebar-active); }
+.nav-icon { font-size: 16px; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 14px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.admin-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px; border-radius: 8px;
+}
+.admin-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--grad); display: flex; align-items: center;
+  justify-content: center; font-size: 14px; color: white; font-weight: 700;
+}
+.admin-info { flex: 1; }
+.admin-name { font-size: 13px; font-weight: 600; color: white; }
+.admin-role { font-size: 11px; color: rgba(255,255,255,.4); }
+.btn-logout {
+  background: none; border: none; color: rgba(255,255,255,.4);
+  cursor: pointer; font-size: 14px; padding: 4px; transition: color .15s;
+}
+.btn-logout:hover { color: var(--rose); }
+
+/* MAIN */
+#main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+.topbar {
+  background: white; border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.page-title { font-family: var(--display); font-size: 17px; font-weight: 700; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 28px 32px; flex: 1; }
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* STATS GRID */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card {
+  background: white; border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 22px;
+}
+.stat-card-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.stat-card-value { font-family: var(--display); font-size: 30px; font-weight: 800; color: var(--text); letter-spacing: -1px; }
+.stat-card-delta { font-size: 12px; color: var(--green); margin-top: 4px; }
+.stat-card-delta.neg { color: var(--red); }
+
+/* TABLE */
+.table-card { background: white; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.table-header {
+  padding: 16px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.table-title { font-family: var(--display); font-size: 15px; font-weight: 700; color: var(--text); }
+.table-search {
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 12px; font-size: 13px; font-family: var(--sans);
+  outline: none; background: var(--bg); width: 220px;
+}
+.table-search:focus { border-color: var(--rose); }
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  padding: 10px 16px; text-align: left;
+  font-size: 11px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--muted);
+  border-bottom: 1px solid var(--border); background: var(--bg);
+}
+tbody tr { transition: background .1s; }
+tbody tr:hover { background: var(--rose-pale); }
+tbody td { padding: 13px 16px; font-size: 13.5px; color: var(--text); border-bottom: 1px solid var(--border); }
+tbody tr:last-child td { border-bottom: none; }
+
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; letter-spacing: .3px;
+}
+.badge-trial { background: var(--amber-pale); color: var(--amber); }
+.badge-active { background: var(--green-pale); color: var(--green); }
+.badge-expired { background: var(--red-pale); color: var(--red); }
+.badge-cancelled { background: #f3f4f6; color: #6b7280; }
+
+.action-btn {
+  padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: white; cursor: pointer;
+  font-family: var(--sans); color: var(--text); transition: all .15s;
+}
+.action-btn:hover { border-color: var(--rose); color: var(--rose); }
+.action-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+/* Filters row */
+.filters { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  border: 1.5px solid var(--border); background: white; cursor: pointer;
+  font-family: var(--sans); color: var(--muted); transition: all .15s;
+}
+.filter-btn.active { background: var(--rose); color: white; border-color: var(--rose); }
+
+/* Loading */
+.loading { text-align: center; padding: 60px; color: var(--muted); font-size: 14px; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.5); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: white; border-radius: 16px; width: 90%; max-width: 480px;
+  padding: 28px; position: relative;
+}
+.modal-title { font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+.modal-field { margin-bottom: 14px; }
+.modal-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+.modal-value { font-size: 14px; color: var(--text); }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted);
+}
+.modal-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.btn-sm {
+  padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  border: none; cursor: pointer; font-family: var(--sans); transition: all .15s;
+}
+.btn-sm.primary { background: var(--grad); color: white; }
+.btn-sm.outline { background: none; border: 1.5px solid var(--border); color: var(--text); }
+.btn-sm.danger { background: var(--red-pale); color: var(--red); }
+.btn-sm:hover { opacity: .85; }
+
+@media(max-width:900px) {
+  #sidebar { width: 60px; }
+  .sidebar-logo span, .nav-item span:not(.nav-icon), .admin-info, .sidebar-section { display: none; }
+  #main { margin-left: 60px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <span class="sidebar-logo-mark">B</span>
+    <span>BeautyBot Admin</span>
+  </div>
+  <div class="sidebar-section">Principal</div>
+  <button class="nav-item active" onclick="showPanel('dashboard', this)">
+    <span class="nav-icon">📊</span><span>Dashboard</span>
+  </button>
+  <button class="nav-item" onclick="showPanel('clients', this)">
+    <span class="nav-icon">👥</span><span>Clientes</span>
+  </button>
+  <button class="nav-item" onclick="showPanel('revenue', this)">
+    <span class="nav-icon">💶</span><span>Receita</span>
+  </button>
+  <div class="sidebar-section">Sistema</div>
+  <button class="nav-item" onclick="showPanel('settings', this)">
+    <span class="nav-icon">⚙️</span><span>Configurações</span>
+  </button>
+  <a class="nav-item" href="/index.html" style="text-decoration:none">
+    <span class="nav-icon">🌐</span><span>Ver Site</span>
+  </a>
+
+  <div class="sidebar-footer">
+    <div class="admin-user">
+      <div class="admin-avatar" id="admin-initial">A</div>
+      <div class="admin-info">
+        <div class="admin-name" id="admin-email">Admin</div>
+        <div class="admin-role">Super Admin</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()" title="Sair">⬡</button>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Dashboard</div>
+    <div class="topbar-right">
+      <span style="font-size:13px;color:var(--muted)" id="topbar-date"></span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- PAINEL: DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-card-label">Total Clientes</div><div class="stat-card-value" id="stat-total">—</div><div class="stat-card-delta" id="stat-total-d"></div></div>
+        <div class="stat-card"><div class="stat-card-label">Activos (pagantes)</div><div class="stat-card-value" id="stat-active">—</div><div class="stat-card-delta" id="stat-active-d"></div></div>
+        <div class="stat-card"><div class="stat-card-label">Em Trial</div><div class="stat-card-value" id="stat-trial">—</div><div class="stat-card-delta" id="stat-trial-d"></div></div>
+        <div class="stat-card"><div class="stat-card-label">Receita Mensal</div><div class="stat-card-value" id="stat-mrr">—</div><div class="stat-card-delta" id="stat-mrr-d"></div></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Clientes recentes</div>
+          <button class="filter-btn" onclick="showPanel('clients', document.querySelectorAll('.nav-item')[1])">Ver todos →</button>
+        </div>
+        <table>
+          <thead><tr><th>Clínica</th><th>Email</th><th>Plano</th><th>Estado</th><th>Desde</th></tr></thead>
+          <tbody id="recent-clients"><tr><td colspan="5" class="loading">A carregar...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAINEL: CLIENTES -->
+    <div class="panel" id="panel-clients">
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Todos os clientes</div>
+          <input class="table-search" id="search-clients" placeholder="🔍 Procurar clínica ou email..." oninput="filterClients()" />
+        </div>
+        <div class="filters">
+          <button class="filter-btn active" onclick="filterByStatus('all', this)">Todos</button>
+          <button class="filter-btn" onclick="filterByStatus('active', this)">✅ Activos</button>
+          <button class="filter-btn" onclick="filterByStatus('trial', this)">🕐 Trial</button>
+          <button class="filter-btn" onclick="filterByStatus('expired', this)">❌ Expirados</button>
+          <button class="filter-btn" onclick="filterByStatus('cancelled', this)">⛔ Cancelados</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Clínica</th>
+              <th>Responsável</th>
+              <th>Email</th>
+              <th>Plano</th>
+              <th>Estado</th>
+              <th>Trial até</th>
+              <th>Acções</th>
+            </tr>
+          </thead>
+          <tbody id="clients-table"><tr><td colspan="7" class="loading">A carregar...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAINEL: RECEITA -->
+    <div class="panel" id="panel-revenue">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-card-label">MRR (Mensal)</div><div class="stat-card-value" id="rev-mrr">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">ARR (Anual)</div><div class="stat-card-value" id="rev-arr">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">Essencial (€97)</div><div class="stat-card-value" id="rev-essential">—</div></div>
+        <div class="stat-card"><div class="stat-card-label">Premium (€197)</div><div class="stat-card-value" id="rev-premium">—</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Análise por plano</div></div>
+        <table>
+          <thead><tr><th>Plano</th><th>Clientes activos</th><th>Receita mensal</th><th>% do total</th></tr></thead>
+          <tbody id="revenue-table"><tr><td colspan="4" class="loading">A calcular...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAINEL: CONFIGURAÇÕES -->
+    <div class="panel" id="panel-settings">
+      <div class="table-card" style="padding:28px;max-width:600px">
+        <h2 style="font-family:var(--display);font-size:20px;font-weight:700;margin-bottom:20px">Configurações do Sistema</h2>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="padding:16px;background:var(--bg);border-radius:10px">
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px">Supabase URL</div>
+            <div style="font-size:13px;color:var(--muted);font-family:monospace" id="cfg-url"></div>
+          </div>
+          <div style="padding:16px;background:var(--bg);border-radius:10px">
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px">Total de utilizadores na BD</div>
+            <div style="font-size:13px;color:var(--muted)" id="cfg-users">A contar...</div>
+          </div>
+          <div style="padding:16px;background:var(--amber-pale);border-radius:10px;border:1px solid var(--amber)">
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px;color:#92400e">⚠️ Trial expirado hoje</div>
+            <div style="font-size:13px;color:#92400e" id="cfg-expired-today">A verificar...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="client-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-title" id="modal-client-name">Cliente</div>
+    <div id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://cdhtcfvvxktouvusyosu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMTE1MTAsImV4cCI6MjA5MjY4NzUxMH0.pf7uOp1fJJzCKYIarr1qF5uQ_iA1Rjh2XtWQYOTm-xk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let allClients = [];
+let currentFilter = 'all';
+let currentClient = null;
+
+// ── INIT ──
+(async () => {
+  // Verificar autenticação e role admin
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return window.location.href = '/login.html';
+
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).single();
+  if (!profile || profile.role !== 'admin') return window.location.href = '/dashboard.html';
+
+  // UI
+  const email = session.user.email;
+  document.getElementById('admin-email').textContent = email;
+  document.getElementById('admin-initial').textContent = email[0].toUpperCase();
+  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('pt-PT', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('cfg-url').textContent = SUPABASE_URL;
+
+  await loadData();
+})();
+
+async function loadData() {
+  const { data: clients, error } = await sb
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) { console.error(error); return; }
+  allClients = clients || [];
+
+  updateStats();
+  renderRecentClients();
+  renderClientsTable();
+  renderRevenue();
+  updateSettings();
+}
+
+function updateStats() {
+  const total = allClients.length;
+  const active = allClients.filter(c => c.plan_status === 'active').length;
+  const trial = allClients.filter(c => c.plan_status === 'trial').length;
+
+  const mrrEssential = allClients.filter(c => c.plan_status === 'active' && c.plan === 'essential').length * 97;
+  const mrrPremium = allClients.filter(c => c.plan_status === 'active' && c.plan === 'premium').length * 197;
+  const mrr = mrrEssential + mrrPremium;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-trial').textContent = trial;
+  document.getElementById('stat-mrr').textContent = '€' + mrr.toLocaleString('pt-PT');
+}
+
+function statusBadge(status) {
+  const map = {
+    active: '<span class="badge badge-active">✅ Activo</span>',
+    trial: '<span class="badge badge-trial">🕐 Trial</span>',
+    expired: '<span class="badge badge-expired">❌ Expirado</span>',
+    cancelled: '<span class="badge badge-cancelled">⛔ Cancelado</span>',
+  };
+  return map[status] || `<span class="badge">${status || '—'}</span>`;
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('pt-PT');
+}
+
+function renderRecentClients() {
+  const tbody = document.getElementById('recent-clients');
+  const recent = allClients.slice(0, 8);
+  if (!recent.length) { tbody.innerHTML = '<tr><td colspan="5" class="loading">Sem clientes ainda</td></tr>'; return; }
+  tbody.innerHTML = recent.map(c => `
+    <tr>
+      <td><strong>${c.clinic_name || '—'}</strong></td>
+      <td>${c.email || '—'}</td>
+      <td style="text-transform:capitalize">${c.plan || 'trial'}</td>
+      <td>${statusBadge(c.plan_status || 'trial')}</td>
+      <td>${formatDate(c.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderClientsTable(filter = allClients) {
+  const tbody = document.getElementById('clients-table');
+  if (!filter.length) { tbody.innerHTML = '<tr><td colspan="7" class="loading">Sem resultados</td></tr>'; return; }
+  tbody.innerHTML = filter.map(c => `
+    <tr>
+      <td><strong>${c.clinic_name || '—'}</strong></td>
+      <td>${c.full_name || '—'}</td>
+      <td>${c.email || '—'}</td>
+      <td style="text-transform:capitalize">${c.plan || 'trial'}</td>
+      <td>${statusBadge(c.plan_status || 'trial')}</td>
+      <td>${formatDate(c.trial_ends_at)}</td>
+      <td>
+        <button class="action-btn" onclick='openClientModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>Gerir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterClients() {
+  const q = document.getElementById('search-clients').value.toLowerCase();
+  let filtered = allClients;
+  if (currentFilter !== 'all') filtered = filtered.filter(c => (c.plan_status || 'trial') === currentFilter);
+  if (q) filtered = filtered.filter(c =>
+    (c.clinic_name || '').toLowerCase().includes(q) ||
+    (c.email || '').toLowerCase().includes(q)
+  );
+  renderClientsTable(filtered);
+}
+
+function filterByStatus(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterClients();
+}
+
+function renderRevenue() {
+  const activeClients = allClients.filter(c => c.plan_status === 'active');
+  const essential = activeClients.filter(c => c.plan === 'essential').length;
+  const premium = activeClients.filter(c => c.plan === 'premium').length;
+  const agency = activeClients.filter(c => c.plan === 'agency').length;
+  const mrr = essential * 97 + premium * 197;
+
+  document.getElementById('rev-mrr').textContent = '€' + mrr.toLocaleString('pt-PT');
+  document.getElementById('rev-arr').textContent = '€' + (mrr * 12).toLocaleString('pt-PT');
+  document.getElementById('rev-essential').textContent = essential + ' clientes';
+  document.getElementById('rev-premium').textContent = premium + ' clientes';
+
+  const tbody = document.getElementById('revenue-table');
+  const rows = [
+    { plano: 'Essencial (€97/mês)', n: essential, rev: essential * 97 },
+    { plano: 'Premium (€197/mês)', n: premium, rev: premium * 197 },
+    { plano: 'Agência (variável)', n: agency, rev: 0 },
+  ];
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.plano}</td>
+      <td>${r.n}</td>
+      <td>€${r.rev.toLocaleString('pt-PT')}</td>
+      <td>${mrr > 0 ? Math.round(r.rev / mrr * 100) : 0}%</td>
+    </tr>
+  `).join('');
+}
+
+function updateSettings() {
+  document.getElementById('cfg-users').textContent = allClients.length + ' utilizadores registados';
+  const expiredToday = allClients.filter(c => {
+    if (!c.trial_ends_at) return false;
+    const d = new Date(c.trial_ends_at);
+    const today = new Date();
+    return d.toDateString() === today.toDateString();
+  });
+  document.getElementById('cfg-expired-today').textContent =
+    expiredToday.length > 0
+      ? expiredToday.map(c => c.clinic_name || c.email).join(', ')
+      : 'Nenhum trial expira hoje';
+}
+
+// ── MODAL CLIENTE ──
+function openClientModal(client) {
+  currentClient = client;
+  document.getElementById('modal-client-name').textContent = client.clinic_name || client.email;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-field"><div class="modal-label">RESPONSÁVEL</div><div class="modal-value">${client.full_name || '—'}</div></div>
+    <div class="modal-field"><div class="modal-label">EMAIL</div><div class="modal-value">${client.email || '—'}</div></div>
+    <div class="modal-field"><div class="modal-label">PLANO</div><div class="modal-value" style="text-transform:capitalize">${client.plan || 'trial'}</div></div>
+    <div class="modal-field"><div class="modal-label">ESTADO</div><div class="modal-value">${statusBadge(client.plan_status || 'trial')}</div></div>
+    <div class="modal-field"><div class="modal-label">MEMBRO DESDE</div><div class="modal-value">${formatDate(client.created_at)}</div></div>
+    <div class="modal-field"><div class="modal-label">TRIAL ATÉ</div><div class="modal-value">${formatDate(client.trial_ends_at)}</div></div>
+  `;
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn-sm primary" onclick="updateClientStatus('active')">✅ Activar</button>
+    <button class="btn-sm outline" onclick="extendTrial(14)">+14 dias trial</button>
+    <button class="btn-sm danger" onclick="updateClientStatus('cancelled')">⛔ Cancelar</button>
+  `;
+  document.getElementById('client-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('client-modal').classList.remove('open');
+  currentClient = null;
+}
+
+async function updateClientStatus(status) {
+  if (!currentClient) return;
+  const { error } = await sb.from('profiles').update({ plan_status: status }).eq('id', currentClient.id);
+  if (error) return alert('Erro: ' + error.message);
+  closeModal();
+  await loadData();
+  alert('Estado actualizado para: ' + status);
+}
+
+async function extendTrial(days) {
+  if (!currentClient) return;
+  const current = currentClient.trial_ends_at ? new Date(currentClient.trial_ends_at) : new Date();
+  current.setDate(current.getDate() + days);
+  const { error } = await sb.from('profiles').update({
+    trial_ends_at: current.toISOString(),
+    plan_status: 'trial'
+  }).eq('id', currentClient.id);
+  if (error) return alert('Erro: ' + error.message);
+  closeModal();
+  await loadData();
+  alert(`Trial estendido por ${days} dias`);
+}
+
+// ── NAVEGAÇÃO ──
+function showPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  const titles = { dashboard: 'Dashboard', clients: 'Clientes', revenue: 'Receita', settings: 'Configurações' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  window.location.href = '/login.html';
+}
+</script>
+</body>
+</html>
