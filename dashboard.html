@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BeautyBot — Painel de Configuração</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #faf9f7; --sidebar: #1a1a2e; --sidebar-active: #e8c5a0;
+    --card: #ffffff; --border: #e8e2d9; --text: #1a1a1a; --muted: #7a7570;
+    --accent: #c9956a; --accent-light: #f5ede4; --accent-dark: #a07048;
+    --radius: 12px; --radius-sm: 8px; --shadow: 0 2px 16px rgba(0,0,0,0.07);
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+  #sidebar { width: 220px; background: var(--sidebar); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  #sidebar-logo { padding: 28px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  #sidebar-logo h1 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--sidebar-active); font-weight: 600; }
+  #sidebar-logo p { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; letter-spacing: 0.5px; text-transform: uppercase; }
+  #sidebar nav { padding: 16px 10px; flex: 1; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: var(--radius-sm); color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.18s; font-size: 13px; margin-bottom: 2px; border: none; background: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+  .nav-item.active { background: rgba(232,197,160,0.15); color: var(--sidebar-active); font-weight: 500; }
+  .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+  #sidebar-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.07); font-size: 11px; color: rgba(255,255,255,0.2); text-align: center; }
+  #main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+  #topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  #topbar h2 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
+  #topbar p { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  #btn-save-top { background: var(--accent); color: white; border: none; padding: 9px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  #btn-save-top:hover { background: var(--accent-dark); }
+  #content { padding: 32px; flex: 1; }
+  .panel { display: none; } .panel.active { display: block; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="time"], input[type="password"], select, textarea { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.15s; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); background: white; }
+  textarea { resize: vertical; min-height: 80px; }
+  .section-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 14px; margin-top: -10px; }
+  .color-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .color-swatch { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
+  .color-swatch.selected { border-color: var(--text); transform: scale(1.15); }
+  input[type="color"] { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); padding: 2px; cursor: pointer; background: none; }
+  #logo-upload-area { border: 2px dashed var(--border); border-radius: var(--radius); padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; }
+  #logo-upload-area:hover { border-color: var(--accent); background: var(--accent-light); }
+  #logo-preview { max-height: 80px; margin: 0 auto 10px; display: none; border-radius: 8px; }
+  #logo-upload-area p { color: var(--muted); font-size: 13px; }
+  #logo-upload-area span { color: var(--accent); font-weight: 500; }
+  #services-list { display: flex; flex-direction: column; gap: 12px; }
+  .service-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+  .service-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .service-info { flex: 1; min-width: 0; }
+  .service-name { font-weight: 500; font-size: 13px; }
+  .service-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .service-price { font-weight: 600; color: var(--accent-dark); font-size: 14px; white-space: nowrap; }
+  .btn-icon { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 6px; color: var(--muted); font-size: 14px; transition: all 0.15s; }
+  .btn-icon:hover { background: var(--border); }
+  .btn-icon.danger:hover { background: #fde8e8; color: #c0392b; }
+  .btn-add { background: var(--accent-light); color: var(--accent-dark); border: 1px dashed var(--accent); border-radius: var(--radius-sm); padding: 11px; width: 100%; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; margin-top: 10px; }
+  .btn-add:hover { background: var(--accent); color: white; }
+  .proto-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: #e8f5e9; color: #2e7d32; font-weight: 500; }
+  .no-proto-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: #fff3e0; color: #e65100; font-weight: 500; }
+  .dias-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; }
+  .dia-btn { aspect-ratio: 1; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 11px; font-weight: 500; color: var(--muted); transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .dia-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .horario-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; background: var(--bg); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  .horario-row label { min-width: 120px; text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--text); font-weight: 400; }
+  #marcacoes-list { display: flex; flex-direction: column; gap: 10px; }
+  .marcacao-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 14px; }
+  .marcacao-hora { background: var(--accent-light); color: var(--accent-dark); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .marcacao-info { flex: 1; }
+  .marcacao-nome { font-weight: 500; font-size: 13px; }
+  .marcacao-servico { font-size: 11px; color: var(--muted); }
+  .badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
+  .badge-pendente { background: #fff3cd; color: #856404; }
+  .badge-confirmada { background: #d4edda; color: #155724; }
+  .badge-cancelada { background: #f8d7da; color: #721c24; }
+  #preview-container { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+  #chatbot-preview { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+  #preview-header { padding: 14px 18px; display: flex; align-items: center; gap: 12px; color: white; }
+  #preview-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; }
+  #preview-msgs { height: 280px; overflow-y: auto; padding: 16px; background: #faf9f7; display: flex; flex-direction: column; gap: 8px; }
+  .pmsg-bot { align-self: flex-start; background: white; border: 1px solid var(--border); padding: 9px 13px; border-radius: 14px 14px 14px 4px; font-size: 13px; max-width: 80%; line-height: 1.5; }
+  .pmsg-user { align-self: flex-end; color: white; padding: 9px 13px; border-radius: 14px 14px 4px 14px; font-size: 13px; max-width: 80%; }
+  .pname { font-size: 10px; font-weight: 600; margin-bottom: 3px; }
+  #preview-input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); background: white; }
+  #preview-input input { flex: 1; border-radius: 20px; font-size: 13px; }
+  #preview-input button { width: 36px; height: 36px; border-radius: 50%; border: none; color: white; cursor: pointer; font-size: 14px; font-family: 'DM Sans', sans-serif; }
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--muted); }
+  .info-value { font-weight: 500; }
+  .api-key-wrapper { position: relative; }
+  .api-key-wrapper input { padding-right: 90px; font-family: monospace; font-size: 12px; }
+  .btn-toggle-key { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 12px; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+  .api-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; margin-top: 8px; }
+  .api-status.ok { background: #e8f5e9; color: #2e7d32; }
+  .api-status.nok { background: #fff3e0; color: #e65100; }
+  .info-box { background: var(--accent-light); border: 1px solid #e8d5c0; border-radius: var(--radius-sm); padding: 12px 16px; font-size: 12px; color: var(--accent-dark); line-height: 1.7; margin-top: 14px; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: var(--card); border-radius: var(--radius); padding: 28px; width: 560px; max-width: 95vw; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .modal-box h3 { font-family: 'Playfair Display', serif; font-size: 17px; margin-bottom: 6px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+  .btn-secondary { background: none; border: 1px solid var(--border); color: var(--text); padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .btn-primary { background: var(--accent); border: none; color: white; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .modal-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .modal-tab { padding: 8px 14px; font-size: 13px; cursor: pointer; border: none; background: none; color: var(--muted); font-family: 'DM Sans', sans-serif; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+  .modal-tab.active { color: var(--accent-dark); border-bottom-color: var(--accent); font-weight: 500; }
+  .tab-content { display: none; } .tab-content.active { display: block; }
+  .emoji-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .emoji-opt { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: all 0.15s; }
+  .emoji-opt:hover, .emoji-opt.selected { background: var(--accent-light); border-color: var(--accent); }
+  .empty-state { text-align: center; padding: 30px; color: var(--muted); font-size: 13px; }
+  .empty-state span { font-size: 32px; display: block; margin-bottom: 8px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  #toast { position: fixed; bottom: 28px; right: 28px; background: var(--sidebar); color: white; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13px; z-index: 300; opacity: 0; transform: translateY(10px); transition: all 0.25s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Keywords tag input */
+  .keywords-wrap { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; background: var(--bg); min-height: 46px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; cursor: text; transition: border-color .15s; }
+  .keywords-wrap:focus-within { border-color: var(--accent); background: white; }
+  .kw-tag { display: inline-flex; align-items: center; gap: 5px; background: var(--accent); color: white; border-radius: 20px; padding: 3px 10px 3px 12px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .kw-tag-remove { background: none; border: none; color: rgba(255,255,255,.7); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; display: flex; align-items: center; }
+  .kw-tag-remove:hover { color: white; }
+  .kw-input { border: none; outline: none; font-size: 13px; font-family: 'DM Sans',sans-serif; background: transparent; color: var(--text); min-width: 140px; flex: 1; padding: 2px 4px; }
+  .kw-hint { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div id="sidebar-logo"><h1>BeautyBot</h1><p>Painel de Configuração</p></div>
+  <nav>
+    <button class="nav-item active" onclick="showPanel('identidade',this)"><span class="nav-icon">✦</span> Identidade</button>
+    <button class="nav-item" onclick="showPanel('servicos',this)"><span class="nav-icon">◈</span> Serviços</button>
+    <button class="nav-item" onclick="showPanel('agenda',this)"><span class="nav-icon">◷</span> Agenda</button>
+    <button class="nav-item" onclick="showPanel('marcacoes',this)"><span class="nav-icon">◻</span> Marcações</button>
+    <button class="nav-item" onclick="showPanel('integracoes',this)"><span class="nav-icon">⚡</span> Integrações</button>
+    <button class="nav-item" onclick="showPanel('preview',this)"><span class="nav-icon">◉</span> Preview</button>
+    <div style="height:1px;background:rgba(255,255,255,0.07);margin:10px 0"></div>
+    <a class="nav-item" href="chatbot.html" target="_blank" style="text-decoration:none"><span class="nav-icon">🤖</span> Abrir Chatbot</a>
+    <a class="nav-item" href="index.html" style="text-decoration:none"><span class="nav-icon">🏠</span> Página Inicial</a>
+  </nav>
+  <div id="sidebar-footer">
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+      <button onclick="exportarDados()" style="background:rgba(232,197,160,0.15);border:1px solid rgba(232,197,160,0.3);color:var(--sidebar-active);border-radius:6px;padding:7px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;text-align:left">💾 Exportar dados</button>
+      <label style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);border-radius:6px;padding:7px 10px;font-size:11px;cursor:pointer;width:100%;text-align:left;display:block">
+        📂 Importar dados
+        <input type="file" id="import-input" accept=".json" onchange="importarDados(event)" style="display:none">
+      </label>
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.2)">v2.0 — BeautyBot Studio</div>
+    <div id="backup-status" style="font-size:10px;color:rgba(232,197,160,0.5);margin-top:4px"></div>
+  </div>
+</div>
+
+<div id="main">
+  <div id="topbar">
+    <div><h2 id="topbar-title">Identidade do Chatbot</h2><p id="topbar-sub">Personalize nome, cores e logótipo</p></div>
+    <button id="btn-save-top" onclick="salvarTudo()">💾 Guardar Configurações</button>
+  </div>
+  <div id="content">
+
+    <!-- IDENTIDADE -->
+    <div class="panel active" id="panel-identidade">
+      <div class="card">
+        <div class="card-title">🏢 Dados do Negócio</div>
+        <div class="form-row">
+          <div class="form-group"><label>Nome do Negócio</label><input type="text" id="nome-negocio" placeholder="Ex: Lumière Spa" /></div>
+          <div class="form-group"><label>Nome da Assistente</label><input type="text" id="nome-assistente" placeholder="Ex: Sofia" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Telefone</label><input type="tel" id="telefone" placeholder="Ex: 910 000 000" /></div>
+          <div class="form-group"><label>Email</label><input type="email" id="email" placeholder="Ex: geral@lumierespa.pt" /></div>
+        </div>
+        <div class="form-row full"><div class="form-group"><label>Morada</label><input type="text" id="morada" placeholder="Ex: Rua das Flores, 12, Lisboa" /></div></div>
+        <div class="form-row full"><div class="form-group"><label>Mensagem de Boas-Vindas</label><textarea id="msg-boas-vindas" placeholder="Ex: Olá! Sou a Sofia da Lumière Spa. Como posso ajudar?"></textarea></div></div>
+        <div class="form-row full"><div class="form-group"><label>Mensagem de Marcação</label><textarea id="msg-marcacao" placeholder="Ex: Para marcar, preciso do teu nome, serviço e data preferida."></textarea></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎨 Cor Principal</div>
+        <p class="section-subtitle">Aplicada ao cabeçalho, botões e balões do utilizador</p>
+        <div class="color-row">
+          <div class="color-swatch selected" style="background:#c9956a" data-color="#c9956a" onclick="selecionarCor(this)"></div>
+          <div class="color-swatch" style="background:#d4547e" data-color="#d4547e" onclick="selecionarCor(this)"></div>
+          <div class="color-swatch" style="background:#8b6db5" data-color="#8b6db5" onclick="selecionarCor(this)"></div>
+          <div class="color-swatch" style="background:#4a9e8b" data-color="#4a9e8b" onclick="selecionarCor(this)"></div>
+          <div class="color-swatch" style="background:#3a7abf" data-color="#3a7abf" onclick="selecionarCor(this)"></div>
+          <div class="color-swatch" style="background:#1a1a2e" data-color="#1a1a2e" onclick="selecionarCor(this)"></div>
+          <label style="text-transform:none;letter-spacing:0;font-size:12px;color:var(--muted)">Personalizada:</label>
+          <input type="color" id="cor-custom" value="#c9956a" oninput="selecionarCorCustom(this.value)" />
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🖼️ Logótipo</div>
+        <p class="section-subtitle">PNG ou JPG, mínimo 100x100px, máx. 2MB</p>
+        <div id="logo-upload-area" onclick="document.getElementById('logo-input').click()">
+          <input type="file" id="logo-input" accept="image/*" onchange="carregarLogo(event)" style="display:none">
+          <img id="logo-preview" src="" alt="Logo" />
+          <p id="logo-text"><span>Clica para carregar</span> o logótipo</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVIÇOS -->
+    <div class="panel" id="panel-servicos">
+      <div class="card">
+        <div class="card-title">💆 Serviços & Protocolos</div>
+        <p class="section-subtitle">Cada serviço pode ter protocolo técnico — o chatbot usa-o para responder perguntas dos clientes sobre tratamentos</p>
+        <div id="services-list"></div>
+        <button class="btn-add" onclick="abrirModalServico()">+ Adicionar Serviço</button>
+      </div>
+    </div>
+
+    <!-- AGENDA -->
+    <div class="panel" id="panel-agenda">
+      <div class="card">
+        <div class="card-title">📅 Dias de Funcionamento</div>
+        <div class="dias-grid" id="dias-grid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🕐 Horários</div>
+        <div class="horario-row"><label>Abertura</label><input type="time" id="hora-abertura" value="09:00" style="width:130px" /></div>
+        <div class="horario-row"><label>Fecho</label><input type="time" id="hora-fecho" value="20:00" style="width:130px" /></div>
+        <div class="horario-row"><label>Duração padrão</label>
+          <select id="duracao-padrao" style="width:160px">
+            <option value="30">30 minutos</option><option value="45">45 minutos</option>
+            <option value="60" selected>60 minutos</option><option value="90">90 minutos</option><option value="120">2 horas</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARCAÇÕES -->
+    <div class="panel" id="panel-marcacoes">
+      <div class="card">
+        <div class="card-title">📋 Gestão de Marcações</div>
+        <div id="marcacoes-list"></div>
+        <button class="btn-add" onclick="abrirModalMarcacao()">+ Nova Marcação Manual</button>
+      </div>
+    </div>
+
+    <!-- INTEGRAÇÕES -->
+    <div class="panel" id="panel-integracoes">
+      <div class="card">
+        <div class="card-title">⚡ API do Claude</div>
+        <p class="section-subtitle">Necessária para o chatbot usar IA real e pesquisar online</p>
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Chave de API (API Key)</label>
+          <div class="api-key-wrapper">
+            <input type="password" id="api-key" placeholder="sk-ant-api03-..." />
+            <button class="btn-toggle-key" onclick="toggleKey()">👁 Mostrar</button>
+          </div>
+          <div id="api-status" class="api-status nok">⚠️ Não configurada — chatbot em modo simulado</div>
+        </div>
+        <div class="info-box">
+          <b>Como obter a API Key:</b><br>
+          1. Acede a <b>console.anthropic.com</b><br>
+          2. Cria conta e adiciona crédito (mínimo $20)<br>
+          3. Vai a <b>API Keys → Create Key</b><br>
+          4. Cola a key aqui e guarda as configurações<br><br>
+          <b>🔒 Em produção (beautybot.pt):</b><br>
+          A chave é configurada nas variáveis de ambiente do Vercel
+          (Settings → Environment Variables → ANTHROPIC_API_KEY).
+          Não fica exposta no código nem no browser — é 100% segura.
+          O campo acima é usado apenas em desenvolvimento local.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">💾 Segurança dos Dados</div>
+        <p class="section-subtitle">Como os teus dados são guardados e protegidos</p>
+
+        <div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:14px">
+          <div style="font-weight:600;color:#2e7d32;margin-bottom:6px;font-size:13px">✅ Quando publicado em beautybot.pt</div>
+          <div style="font-size:13px;color:#388e3c;line-height:1.65">Os dados ficam permanentemente guardados no browser do utilizador. Actualizações ao site não apagam os dados porque o domínio é sempre o mesmo.</div>
+        </div>
+
+        <div style="background:#fff3e0;border:1px solid #ffe0b2;border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px">
+          <div style="font-weight:600;color:#e65100;margin-bottom:6px;font-size:13px">⚠️ Em ficheiros locais (antes de publicar)</div>
+          <div style="font-size:13px;color:#bf360c;line-height:1.65">Ao substituir o ficheiro HTML, os dados podem perder-se. Usa sempre o botão "Exportar dados" antes de actualizar.</div>
+        </div>
+
+        <div style="font-size:13px;color:var(--text);margin-bottom:8px;font-weight:500">Procedimento recomendado ao actualizar:</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><span style="width:22px;height:22px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent-dark);flex-shrink:0">1</span>Clica em <b>Exportar dados</b> no menu lateral</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><span style="width:22px;height:22px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent-dark);flex-shrink:0">2</span>Substitui o ficheiro HTML pelo novo</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><span style="width:22px;height:22px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent-dark);flex-shrink:0">3</span>Clica em <b>Importar dados</b> e selecciona o ficheiro exportado</div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><span style="width:22px;height:22px;background:var(--accent-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--accent-dark);flex-shrink:0">4</span>Todos os dados são restaurados automaticamente ✅</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔍 Pesquisa Online</div>
+        <p class="section-subtitle">Quando ativa, o chatbot pesquisa na internet para complementar os protocolos de tratamento</p>
+        <div class="horario-row" style="justify-content:space-between">
+          <label style="text-transform:none;font-size:13px;font-weight:400">Ativar pesquisa online</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0">
+            <input type="checkbox" id="pesquisa-ativa" style="width:auto;accent-color:var(--accent)" />
+            <span id="pesquisa-label" style="font-size:13px;color:var(--muted)">Desativada</span>
+          </label>
+        </div>
+        <div class="divider"></div>
+        <div class="form-group">
+          <label>Contexto da Clínica (para pesquisas)</label>
+          <textarea id="contexto-pesquisa" rows="3" placeholder="Ex: Somos uma clínica de estética em Lisboa, focada em tratamentos naturais e não invasivos. Respostas sempre em português europeu e tom profissional."></textarea>
+          <p style="font-size:11px;color:var(--muted);margin-top:4px">Este texto contextualiza as pesquisas do Claude</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="panel" id="panel-preview">
+      <div id="preview-container">
+        <div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">👁️ Preview em Tempo Real</div>
+            <p class="section-subtitle" style="margin-bottom:16px">Pré-visualização com configurações atuais</p>
+            <div id="chatbot-preview">
+              <div id="preview-header">
+                <div id="preview-avatar">🌸</div>
+                <div>
+                  <div id="preview-nome" style="font-weight:600;font-size:14px">Sofia</div>
+                  <div id="preview-empresa" style="font-size:11px;opacity:0.8">Lumière Spa</div>
+                </div>
+                <div style="width:8px;height:8px;background:#00ff88;border-radius:50%;margin-left:auto"></div>
+              </div>
+              <div id="preview-msgs"></div>
+              <div id="preview-input">
+                <input type="text" id="preview-pergunta" placeholder="Escreve uma mensagem..." />
+                <button id="preview-btn" onclick="previewEnviar()">➤</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title">⚙️ Estado Atual</div>
+            <div class="info-row"><span class="info-label">Negócio</span><span class="info-value" id="pi-negocio">—</span></div>
+            <div class="info-row"><span class="info-label">Assistente</span><span class="info-value" id="pi-assistente">—</span></div>
+            <div class="info-row"><span class="info-label">Serviços</span><span class="info-value" id="pi-servicos">0</span></div>
+            <div class="info-row"><span class="info-label">Com protocolo</span><span class="info-value" id="pi-protocolos">0</span></div>
+            <div class="info-row"><span class="info-label">API Claude</span><span class="info-value" id="pi-api">❌</span></div>
+            <div class="info-row"><span class="info-label">Horário</span><span class="info-value" id="pi-horario">—</span></div>
+          </div>
+          <div class="card">
+            <div class="card-title">🧪 Testes Rápidos</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="btn-secondary" style="text-align:left;font-size:12px;padding:8px 12px" onclick="previewTestar('Que serviços têm?')">💬 "Que serviços têm?"</button>
+              <button class="btn-secondary" style="text-align:left;font-size:12px;padding:8px 12px" onclick="previewTestar('Qual o preço de cada serviço?')">💬 "Qual o preço?"</button>
+              <button class="btn-secondary" style="text-align:left;font-size:12px;padding:8px 12px" onclick="previewTestar('Quero marcar uma consulta')">💬 "Quero marcar"</button>
+              <button class="btn-secondary" style="text-align:left;font-size:12px;padding:8px 12px" onclick="previewTestar('Tive uma reação após o tratamento')">💬 "Tive uma reação"</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL SERVIÇO -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modal-title">Adicionar Serviço</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Preenche os dados básicos e o protocolo técnico do tratamento</p>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="showTab('tab-basico',this)">Dados Básicos</button>
+      <button class="modal-tab" onclick="showTab('tab-protocolo',this)">Protocolo</button>
+      <button class="modal-tab" onclick="showTab('tab-problemas',this)">Problemas Comuns</button>
+    </div>
+    <!-- BÁSICO -->
+    <div class="tab-content active" id="tab-basico">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Ícone</p>
+      <div class="emoji-picker" id="emoji-picker">
+        <div class="emoji-opt selected" data-emoji="💆" onclick="selecionarEmoji(this)">💆</div>
+        <div class="emoji-opt" data-emoji="💅" onclick="selecionarEmoji(this)">💅</div>
+        <div class="emoji-opt" data-emoji="✂️" onclick="selecionarEmoji(this)">✂️</div>
+        <div class="emoji-opt" data-emoji="🧖" onclick="selecionarEmoji(this)">🧖</div>
+        <div class="emoji-opt" data-emoji="💇" onclick="selecionarEmoji(this)">💇</div>
+        <div class="emoji-opt" data-emoji="🌿" onclick="selecionarEmoji(this)">🌿</div>
+        <div class="emoji-opt" data-emoji="✨" onclick="selecionarEmoji(this)">✨</div>
+        <div class="emoji-opt" data-emoji="🪷" onclick="selecionarEmoji(this)">🪷</div>
+        <div class="emoji-opt" data-emoji="💊" onclick="selecionarEmoji(this)">💊</div>
+        <div class="emoji-opt" data-emoji="🧴" onclick="selecionarEmoji(this)">🧴</div>
+        <div class="emoji-opt" data-emoji="🌸" onclick="selecionarEmoji(this)">🌸</div>
+        <div class="emoji-opt" data-emoji="🔬" onclick="selecionarEmoji(this)">🔬</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome do Serviço</label><input type="text" id="s-nome" placeholder="Ex: Facial Hidratante" /></div>
+        <div class="form-group"><label>Categoria</label>
+          <select id="s-categoria"><option>Facial</option><option>Corporal</option><option>Cabelo</option><option>Unhas</option><option>Massagem</option><option>Depilação</option><option>Medicina Estética</option><option>Outro</option></select>
+        </div>
+      </div>
+      <div class="form-row three">
+        <div class="form-group"><label>Preço (€)</label><input type="number" id="s-preco" placeholder="45" min="0" /></div>
+        <div class="form-group"><label>Duração (min)</label><input type="number" id="s-duracao" placeholder="60" min="15" step="15" /></div>
+        <div class="form-group"><label>Sessões recom.</label><input type="number" id="s-sessoes" placeholder="6" min="1" /></div>
+      </div>
+      <div class="form-row full"><div class="form-group"><label>Descrição (apresentação ao cliente)</label><textarea id="s-descricao" rows="2" placeholder="Ex: Tratamento profundo de hidratação com ácido hialurónico..."></textarea></div></div>
+
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Palavras-chave do serviço</label>
+          <div class="keywords-wrap" id="keywords-wrap" onclick="document.getElementById('kw-input-field').focus()">
+            <input
+              type="text"
+              id="kw-input-field"
+              class="kw-input"
+              placeholder='"queda de cabelo" "gordura localizada" ...'
+              onkeydown="handleKwKeydown(event)"
+              onpaste="handleKwPaste(event)"
+            />
+          </div>
+          <div class="kw-hint">
+            💡 Escreve uma frase entre <b>"aspas"</b> e prime <b>Enter</b> ou <b>vírgula</b> para adicionar.<br>
+            Usa frases completas para maior precisão: <i>"gordura localizada"</i>, <i>"queda de cabelo"</i>, <i>"pele oleosa com acne"</i>
+          </div>
+          <input type="hidden" id="s-keywords" />
+        </div>
+      </div>
+    </div>
+    <!-- PROTOCOLO -->
+    <div class="tab-content" id="tab-protocolo">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">O chatbot lê este protocolo para responder a perguntas como <em>"como funciona?"</em>, <em>"o que devo fazer antes/depois?"</em> ou <em>"para quem é indicado?"</em></p>
+      <div class="form-group" style="margin-bottom:14px"><label>Indicações (para quem é indicado)</label><textarea id="s-indicacoes" rows="3" placeholder="Ex: Indicado para peles desidratadas, opacas ou com sinais de envelhecimento. Adequado para todos os tipos de pele."></textarea></div>
+      <div class="form-group" style="margin-bottom:14px"><label>Preparação pré-tratamento</label><textarea id="s-pre" rows="3" placeholder="Ex: Não usar ácidos ou retinol 48h antes. Chegar com pele limpa, sem maquilhagem."></textarea></div>
+      <div class="form-group" style="margin-bottom:14px"><label>Cuidados pós-tratamento</label><textarea id="s-pos" rows="3" placeholder="Ex: Evitar sol direto 48h. Usar protetor solar fator 50. Sem maquilhagem nas primeiras 24h."></textarea></div>
+      <div class="form-group"><label>Resultados esperados</label><textarea id="s-resultados" rows="2" placeholder="Ex: Pele visivelmente mais hidratada após 1ª sessão. Resultados duradouros com protocolo de 4 sessões."></textarea></div>
+    </div>
+    <!-- PROBLEMAS -->
+    <div class="tab-content" id="tab-problemas">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">O chatbot usa estas informações quando um cliente reporta um problema. Se não souber responder, pesquisa online (requer API Key ativa).</p>
+      <div class="form-group" style="margin-bottom:14px"><label>Reações normais esperadas</label><textarea id="s-reacoes-normais" rows="3" placeholder="Ex: Ligeira vermelhidão nas primeiras 2-4h é normal. Sensação de tensão desaparece em 24h."></textarea></div>
+      <div class="form-group" style="margin-bottom:14px"><label>Situações de alerta — contactar a clínica</label><textarea id="s-alertas" rows="3" placeholder="Ex: Vermelhidão intensa após 24h, inchaço, bolhas ou dor persistente — contactar imediatamente."></textarea></div>
+      <div class="form-group"><label>Contraindicações</label><textarea id="s-contraindicacoes" rows="2" placeholder="Ex: Não indicado para grávidas, rosácea ativa, herpes ativo ou feridas abertas."></textarea></div>
+    </div>
+    <input type="hidden" id="s-edit-index" value="-1" />
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarServico()">Guardar Serviço</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MARCAÇÃO -->
+<div class="modal-overlay" id="modal-marcacao-overlay">
+  <div class="modal-box" style="width:460px">
+    <h3>Nova Marcação</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:20px">Adicionar marcação manualmente</p>
+    <div class="form-row">
+      <div class="form-group"><label>Nome do Cliente</label><input type="text" id="m-nome" placeholder="Ex: Ana Silva" /></div>
+      <div class="form-group"><label>Telefone</label><input type="tel" id="m-tel" placeholder="Ex: 912 000 000" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Serviço</label><select id="m-servico"></select></div>
+      <div class="form-group"><label>Estado</label><select id="m-estado"><option value="pendente">Pendente</option><option value="confirmada">Confirmada</option><option value="cancelada">Cancelada</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Data</label><input type="text" id="m-data" placeholder="Ex: 25/04/2026" /></div>
+      <div class="form-group"><label>Hora</label><input type="time" id="m-hora" value="10:00" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModalMarcacao()">Cancelar</button>
+      <button class="btn-primary" onclick="guardarMarcacao()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">✓ Guardado!</div>
+
+<script>
+let config = {
+  nomeNegocio:'', nomeAssistente:'', telefone:'', email:'', morada:'',
+  msgBoasVindas:'', msgMarcacao:'', corPrincipal:'#c9956a', logoBase64:'',
+  servicos:[], diasAtivos:[1,2,3,4,5], horaAbertura:'09:00', horaFecho:'20:00',
+  duracaoPadrao:60, marcacoes:[], apiKey:'', pesquisaAtiva:false, contexto:''
+};
+let emojiSelecionado = '💆';
+const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const topbarTitles = {
+  identidade:['Identidade do Chatbot','Personalize nome, cores e logótipo'],
+  servicos:['Serviços & Protocolos','Gere serviços e protocolos de tratamento'],
+  agenda:['Agenda','Configura horários e dias de funcionamento'],
+  marcacoes:['Marcações','Gere as marcações recebidas'],
+  integracoes:['Integrações','Configura API do Claude e pesquisa online'],
+  preview:['Preview','Visualiza e testa o chatbot']
+};
+
+function showPanel(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  const [t,s]=topbarTitles[id];
+  document.getElementById('topbar-title').textContent=t;
+  document.getElementById('topbar-sub').textContent=s;
+  if(id==='preview') atualizarPreview();
+}
+
+function showTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.modal-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+function selecionarCor(el){
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  config.corPrincipal=el.dataset.color;
+  document.getElementById('cor-custom').value=config.corPrincipal;
+}
+function selecionarCorCustom(val){
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));
+  config.corPrincipal=val;
+}
+
+function carregarLogo(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    config.logoBase64=ev.target.result;
+    document.getElementById('logo-preview').src=ev.target.result;
+    document.getElementById('logo-preview').style.display='block';
+    document.getElementById('logo-text').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function toggleKey(){
+  const inp=document.getElementById('api-key');
+  const btn=inp.nextElementSibling;
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈 Ocultar';}
+  else{inp.type='password';btn.textContent='👁 Mostrar';}
+}
+
+document.getElementById('pesquisa-ativa').addEventListener('change',function(){
+  document.getElementById('pesquisa-label').textContent=this.checked?'Ativada':'Desativada';
+});
+
+function renderDias(){
+  const grid=document.getElementById('dias-grid'); grid.innerHTML='';
+  DIAS.forEach((d,i)=>{
+    const btn=document.createElement('button');
+    btn.className='dia-btn'+(config.diasAtivos.includes(i)?' active':'');
+    btn.textContent=d;
+    btn.onclick=()=>{
+      if(config.diasAtivos.includes(i)) config.diasAtivos=config.diasAtivos.filter(x=>x!==i);
+      else config.diasAtivos.push(i);
+      btn.classList.toggle('active');
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function renderServicos(){
+  const list=document.getElementById('services-list');
+  if(!config.servicos.length){list.innerHTML='<div class="empty-state"><span>💆</span>Ainda não adicionaste serviços</div>';return;}
+  list.innerHTML='';
+  config.servicos.forEach((s,i)=>{
+    const temProto=!!(s.indicacoes||s.pre||s.pos||s.resultados||s.reacoes||s.alertas||s.contraindicacoes);
+    const el=document.createElement('div'); el.className='service-item';
+    el.innerHTML=`
+      <div class="service-icon">${s.emoji}</div>
+      <div class="service-info">
+        <div class="service-name">${s.nome} <span class="${temProto?'proto-badge':'no-proto-badge'}">${temProto?'✓ Protocolo':'Sem protocolo'}</span>${s.keywords&&s.keywords.length?`<span class="proto-badge" style="background:var(--accent-light);color:var(--accent-dark);margin-left:4px">🔑 ${s.keywords.length} palavras-chave</span>`:''}</div>
+        <div class="service-meta">${s.categoria} · ${s.duracao}min${s.sessoes?' · '+s.sessoes+' sessões':''} · ${(s.descricao||'').substring(0,45)}${(s.descricao||'').length>45?'...':''}</div>
+      </div>
+      <div class="service-price">${s.preco}€</div>
+      <button class="btn-icon" onclick="editarServico(${i})">✏️</button>
+      <button class="btn-icon danger" onclick="removerServico(${i})">🗑️</button>`;
+    list.appendChild(el);
+  });
+}
+
+// ── KEYWORDS TAG INPUT ────────────────────────────────────
+let _kwTags = []; // array de strings actuais
+
+function renderKwTags() {
+  const wrap = document.getElementById('keywords-wrap');
+  const input = document.getElementById('kw-input-field');
+  // Remove tags antigas mas mantém o input
+  wrap.querySelectorAll('.kw-tag').forEach(t => t.remove());
+  // Re-insere tags antes do input
+  _kwTags.forEach((tag, i) => {
+    const el = document.createElement('span');
+    el.className = 'kw-tag';
+    el.innerHTML = `"${tag}" <button class="kw-tag-remove" onclick="removeKw(${i})" title="Remover">×</button>`;
+    wrap.insertBefore(el, input);
+  });
+  // Guarda no hidden input como JSON
+  document.getElementById('s-keywords').value = JSON.stringify(_kwTags);
+}
+
+function addKwTag(valor) {
+  // Remove aspas se o utilizador as incluiu
+  const limpo = valor.replace(/^["'""'']+|["'""'']+$/g, '').trim();
+  if (!limpo || limpo.length < 2) return;
+  // Evita duplicados
+  if (_kwTags.includes(limpo)) return;
+  _kwTags.push(limpo);
+  renderKwTags();
+  document.getElementById('kw-input-field').value = '';
+}
+
+function removeKw(i) {
+  _kwTags.splice(i, 1);
+  renderKwTags();
+}
+
+function handleKwKeydown(e) {
+  const val = e.target.value.trim();
+  // Enter ou vírgula → adiciona a tag
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    // Se está a escrever entre aspas, espera fechar as aspas
+    const semAspas = val.replace(/^["'""'']+|["'""'']+$/g, '').trim();
+    if (semAspas) addKwTag(semAspas);
+  }
+  // Backspace com campo vazio → remove última tag
+  if (e.key === 'Backspace' && val === '' && _kwTags.length > 0) {
+    _kwTags.pop();
+    renderKwTags();
+  }
+}
+
+function handleKwPaste(e) {
+  e.preventDefault();
+  const texto = (e.clipboardData || window.clipboardData).getData('text');
+  // Separa por vírgula ou ponto-e-vírgula e adiciona cada um
+  const partes = texto.split(/[,;]+/);
+  partes.forEach(p => addKwTag(p));
+}
+
+function inicializarKwTags(keywordsExistentes) {
+  _kwTags = [];
+  if (Array.isArray(keywordsExistentes)) {
+    _kwTags = [...keywordsExistentes];
+  } else if (typeof keywordsExistentes === 'string' && keywordsExistentes) {
+    try { _kwTags = JSON.parse(keywordsExistentes); } catch(e) {}
+  }
+  renderKwTags();
+}
+// ── FIM KEYWORDS ──────────────────────────────────────────
+
+function selecionarEmoji(el){
+  document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected'); emojiSelecionado=el.dataset.emoji;
+}
+
+function abrirModalServico(){
+  ['s-nome','s-descricao','s-indicacoes','s-pre','s-pos','s-resultados','s-reacoes-normais','s-alertas','s-contraindicacoes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s-preco').value='';
+  document.getElementById('s-duracao').value='60';
+  document.getElementById('s-sessoes').value='';
+  document.getElementById('s-edit-index').value='-1';
+  document.getElementById('modal-title').textContent='Adicionar Serviço';
+  emojiSelecionado='💆';
+  inicializarKwTags([]); // Limpa keywords
+  document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.remove('selected'));
+  document.querySelector('.emoji-opt').classList.add('selected');
+  showTab('tab-basico',document.querySelector('.modal-tab'));
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function editarServico(i){
+  const s=config.servicos[i];
+  document.getElementById('s-nome').value=s.nome||'';
+  document.getElementById('s-preco').value=s.preco||'';
+  document.getElementById('s-duracao').value=s.duracao||60;
+  document.getElementById('s-sessoes').value=s.sessoes||'';
+  document.getElementById('s-descricao').value=s.descricao||'';
+  document.getElementById('s-indicacoes').value=s.indicacoes||'';
+  document.getElementById('s-pre').value=s.pre||'';
+  document.getElementById('s-pos').value=s.pos||'';
+  document.getElementById('s-resultados').value=s.resultados||'';
+  document.getElementById('s-reacoes-normais').value=s.reacoes||'';
+  document.getElementById('s-alertas').value=s.alertas||'';
+  document.getElementById('s-contraindicacoes').value=s.contraindicacoes||'';
+  document.getElementById('s-categoria').value=s.categoria||'Facial';
+  document.getElementById('s-edit-index').value=i;
+  document.getElementById('modal-title').textContent='Editar Serviço';
+  emojiSelecionado=s.emoji;
+  inicializarKwTags(s.keywords||[]); // Carrega keywords existentes
+  document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.toggle('selected',e.dataset.emoji===s.emoji));
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function guardarServico(){
+  const nome=document.getElementById('s-nome').value.trim();
+  const preco=parseFloat(document.getElementById('s-preco').value);
+  if(!nome||isNaN(preco)){alert('Preenche pelo menos nome e preço.');return;}
+  const s={
+    emoji:emojiSelecionado, nome, categoria:document.getElementById('s-categoria').value,
+    preco, duracao:parseInt(document.getElementById('s-duracao').value)||60,
+    sessoes:parseInt(document.getElementById('s-sessoes').value)||null,
+    descricao:document.getElementById('s-descricao').value.trim(),
+    keywords: _kwTags.length > 0 ? [..._kwTags] : [],
+    indicacoes:document.getElementById('s-indicacoes').value.trim(),
+    pre:document.getElementById('s-pre').value.trim(),
+    pos:document.getElementById('s-pos').value.trim(),
+    resultados:document.getElementById('s-resultados').value.trim(),
+    reacoes:document.getElementById('s-reacoes-normais').value.trim(),
+    alertas:document.getElementById('s-alertas').value.trim(),
+    contraindicacoes:document.getElementById('s-contraindicacoes').value.trim()
+  };
+  const idx=parseInt(document.getElementById('s-edit-index').value);
+  if(idx>=0) config.servicos[idx]=s; else config.servicos.push(s);
+  fecharModal(); renderServicos(); mostrarToast('Serviço guardado!');
+}
+
+function removerServico(i){if(!confirm('Remover este serviço?'))return;config.servicos.splice(i,1);renderServicos();}
+function fecharModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+function renderMarcacoes(){
+  const list=document.getElementById('marcacoes-list');
+  if(!config.marcacoes.length){list.innerHTML='<div class="empty-state"><span>📋</span>Sem marcações ainda</div>';return;}
+  list.innerHTML='';
+  config.marcacoes.forEach((m,i)=>{
+    const el=document.createElement('div'); el.className='marcacao-item';
+    el.innerHTML=`
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">${m.data}</div><div class="marcacao-hora">${m.hora}</div></div>
+      <div class="marcacao-info"><div class="marcacao-nome">${m.nome}</div><div class="marcacao-servico">${m.servico} · ${m.tel}</div></div>
+      <span class="badge badge-${m.estado}">${m.estado}</span>
+      <button class="btn-icon danger" onclick="removerMarcacao(${i})">🗑️</button>`;
+    list.appendChild(el);
+  });
+}
+
+function abrirModalMarcacao(){
+  const sel=document.getElementById('m-servico');
+  sel.innerHTML=config.servicos.length?config.servicos.map(s=>`<option>${s.nome}</option>`).join(''):'<option>Sem serviços</option>';
+  document.getElementById('modal-marcacao-overlay').classList.add('open');
+}
+function fecharModalMarcacao(){document.getElementById('modal-marcacao-overlay').classList.remove('open');}
+function guardarMarcacao(){
+  const nome=document.getElementById('m-nome').value.trim();
+  if(!nome){alert('Insere o nome do cliente.');return;}
+  config.marcacoes.unshift({nome,tel:document.getElementById('m-tel').value,servico:document.getElementById('m-servico').value,estado:document.getElementById('m-estado').value,data:document.getElementById('m-data').value||'Sem data',hora:document.getElementById('m-hora').value});
+  fecharModalMarcacao(); renderMarcacoes(); mostrarToast('Marcação adicionada!');
+}
+function removerMarcacao(i){if(!confirm('Remover?'))return;config.marcacoes.splice(i,1);renderMarcacoes();}
+
+function atualizarPreview(){
+  lerFormulario();
+  const cor=config.corPrincipal;
+  document.getElementById('preview-header').style.background=cor;
+  document.getElementById('preview-btn').style.background=cor;
+  document.getElementById('preview-nome').textContent=config.nomeAssistente||'Assistente';
+  document.getElementById('preview-empresa').textContent=config.nomeNegocio||'O meu negócio';
+  const av=document.getElementById('preview-avatar');
+  av.innerHTML=config.logoBase64?`<img src="${config.logoBase64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:'🌸';
+  document.getElementById('pi-negocio').textContent=config.nomeNegocio||'—';
+  document.getElementById('pi-assistente').textContent=config.nomeAssistente||'—';
+  document.getElementById('pi-servicos').textContent=config.servicos.length;
+  document.getElementById('pi-protocolos').textContent=config.servicos.filter(s=>s.indicacoes||s.pre||s.pos).length;
+  document.getElementById('pi-api').textContent=config.apiKey?'✅ Configurada':'❌ Não configurada';
+  document.getElementById('pi-horario').textContent=config.horaAbertura&&config.horaFecho?config.horaAbertura+' – '+config.horaFecho:'—';
+  const msgs=document.getElementById('preview-msgs');
+  if(!msgs.children.length){
+    const msg=config.msgBoasVindas||`Olá! Sou ${config.nomeAssistente||'a assistente'} de ${config.nomeNegocio||'o nosso espaço'}. Como posso ajudar?`;
+    adicionarMsgBotPreview(msg);
+  }
+}
+
+function adicionarMsgBotPreview(texto){
+  const msgs=document.getElementById('preview-msgs');
+  const el=document.createElement('div'); el.className='pmsg-bot';
+  el.innerHTML=`<div class="pname" style="color:${config.corPrincipal}">${config.nomeAssistente||'Bot'}</div>${texto}`;
+  msgs.appendChild(el); msgs.scrollTop=msgs.scrollHeight;
+}
+function adicionarMsgUserPreview(texto){
+  const msgs=document.getElementById('preview-msgs');
+  const el=document.createElement('div'); el.className='pmsg-user';
+  el.style.background=config.corPrincipal; el.textContent=texto;
+  msgs.appendChild(el); msgs.scrollTop=msgs.scrollHeight;
+}
+function previewEnviar(){
+  const input=document.getElementById('preview-pergunta');
+  const texto=input.value.trim(); if(!texto) return;
+  adicionarMsgUserPreview(texto); input.value='';
+  setTimeout(()=>adicionarMsgBotPreview(previewResponder(texto.toLowerCase())),700);
+}
+function previewTestar(msg){document.getElementById('preview-pergunta').value=msg;previewEnviar();}
+function previewResponder(t){
+  if(t.includes('serviço')||t.includes('tratamento')||t.includes('fazem')||t.includes('têm')){
+    if(!config.servicos.length) return 'Serviços ainda não configurados.';
+    let r='Os nossos serviços:<br><br>';
+    config.servicos.forEach(s=>{r+=`${s.emoji} <b>${s.nome}</b> (${s.duracao}min)<br>`;});
+    return r+'<br>Podes perguntar sobre qualquer um para mais detalhes!';
+  }
+  if(t.includes('preço')||t.includes('custo')||t.includes('quanto')){
+    if(!config.servicos.length) return 'Preços ainda não configurados.';
+    let r='💶 Tabela de preços:<br><br>';
+    config.servicos.forEach(s=>{r+=`${s.emoji} ${s.nome}: <b>${s.preco}€</b><br>`;});
+    return r;
+  }
+  if(t.includes('reação')||t.includes('problema')||t.includes('dor')||t.includes('vermelhidão')){
+    return '⚕️ Lamento que esteja com este problema. Por favor diga-me qual o tratamento que realizou para eu verificar o protocolo e ajudá-la melhor.';
+  }
+  if(t.includes('horário')||t.includes('hora')||t.includes('aberto')){
+    return `🕐 Estamos abertos das <b>${config.horaAbertura||'09:00'}</b> às <b>${config.horaFecho||'20:00'}</b>.`;
+  }
+  if(t.includes('marcar')||t.includes('marcação')||t.includes('agendar')){
+    return config.msgMarcacao||'Para marcar, preciso do teu nome, serviço pretendido e data. Podes partilhar?';
+  }
+  return `Para mais informações, contacta-nos: 📞 <b>${config.telefone||'—'}</b>`;
+}
+document.getElementById('preview-pergunta').addEventListener('keypress',e=>{if(e.key==='Enter')previewEnviar();});
+
+function lerFormulario(){
+  config.nomeNegocio=document.getElementById('nome-negocio').value;
+  config.nomeAssistente=document.getElementById('nome-assistente').value;
+  config.telefone=document.getElementById('telefone').value;
+  config.email=document.getElementById('email').value;
+  config.morada=document.getElementById('morada').value;
+  config.msgBoasVindas=document.getElementById('msg-boas-vindas').value;
+  config.msgMarcacao=document.getElementById('msg-marcacao').value;
+  config.horaAbertura=document.getElementById('hora-abertura').value;
+  config.horaFecho=document.getElementById('hora-fecho').value;
+  config.duracaoPadrao=parseInt(document.getElementById('duracao-padrao').value);
+  config.apiKey=document.getElementById('api-key').value.trim();
+  config.pesquisaAtiva=document.getElementById('pesquisa-ativa').checked;
+  config.contexto=document.getElementById('contexto-pesquisa').value;
+}
+
+function salvarTudo(){
+  lerFormulario();
+  localStorage.setItem('beautybot_config',JSON.stringify(config));
+
+  // Faz backup automático sempre que guarda
+  fazerBackupAutomatico();
+
+  const st=document.getElementById('api-status');
+  if(config.apiKey){st.className='api-status ok';st.textContent='✅ API Key configurada — IA real ativa';}
+  else{st.className='api-status nok';st.textContent='⚠️ Não configurada — modo simulado';}
+  mostrarToast('✓ Configurações guardadas e backup feito!');
+}
+
+function carregarConfig(){
+  const g=localStorage.getItem('beautybot_config'); if(!g) return;
+  try{
+    const c=JSON.parse(g); Object.assign(config,c);
+    document.getElementById('nome-negocio').value=c.nomeNegocio||'';
+    document.getElementById('nome-assistente').value=c.nomeAssistente||'';
+    document.getElementById('telefone').value=c.telefone||'';
+    document.getElementById('email').value=c.email||'';
+    document.getElementById('morada').value=c.morada||'';
+    document.getElementById('msg-boas-vindas').value=c.msgBoasVindas||'';
+    document.getElementById('msg-marcacao').value=c.msgMarcacao||'';
+    document.getElementById('hora-abertura').value=c.horaAbertura||'09:00';
+    document.getElementById('hora-fecho').value=c.horaFecho||'20:00';
+    document.getElementById('api-key').value=c.apiKey||'';
+    document.getElementById('pesquisa-ativa').checked=c.pesquisaAtiva||false;
+    document.getElementById('pesquisa-label').textContent=c.pesquisaAtiva?'Ativada':'Desativada';
+    document.getElementById('contexto-pesquisa').value=c.contexto||'';
+    if(c.corPrincipal){document.getElementById('cor-custom').value=c.corPrincipal;document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.color===c.corPrincipal));}
+    if(c.logoBase64){document.getElementById('logo-preview').src=c.logoBase64;document.getElementById('logo-preview').style.display='block';document.getElementById('logo-text').style.display='none';}
+    if(c.apiKey){const st=document.getElementById('api-status');st.className='api-status ok';st.textContent='✅ API Key configurada';}
+  }catch(e){}
+}
+
+function mostrarToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ──────────────────────────────────────────────────
+// EXPORTAR — salva todos os dados num ficheiro JSON
+// ──────────────────────────────────────────────────
+function exportarDados() {
+  lerFormulario();
+  const dados = JSON.stringify(config, null, 2);
+  const blob = new Blob([dados], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const data = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `beautybot-backup-${data}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  mostrarToast('✓ Dados exportados com sucesso!');
+}
+
+// ──────────────────────────────────────────────────
+// IMPORTAR — restaura dados de um ficheiro JSON
+// ──────────────────────────────────────────────────
+function importarDados(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const dadosImportados = JSON.parse(e.target.result);
+
+      // Valida estrutura mínima
+      if (!dadosImportados.nomeNegocio && !dadosImportados.servicos) {
+        alert('❌ Ficheiro inválido. Por favor usa um backup exportado pelo BeautyBot.');
+        return;
+      }
+
+      if (!confirm(`Importar dados de "${dadosImportados.nomeNegocio || 'configuração'}"?
+
+Isto substituirá a configuração actual.`)) return;
+
+      // Guarda no localStorage
+      localStorage.setItem('beautybot_config', JSON.stringify(dadosImportados));
+
+      // Recarrega a página para aplicar tudo
+      mostrarToast('✓ Dados importados! A recarregar...');
+      setTimeout(() => location.reload(), 1200);
+
+    } catch(err) {
+      alert('❌ Erro ao ler o ficheiro. Certifica-te que é um backup válido do BeautyBot.');
+    }
+  };
+  reader.readAsText(file);
+
+  // Reset input para permitir importar o mesmo ficheiro novamente
+  event.target.value = '';
+}
+
+// ──────────────────────────────────────────────────
+// BACKUP AUTOMÁTICO — salva uma cópia extra com timestamp
+// Mantém os últimos 3 backups em chaves separadas
+// ──────────────────────────────────────────────────
+function fazerBackupAutomatico() {
+  try {
+    lerFormulario();
+    const agora = new Date().toISOString();
+    const dadosBackup = { ...config, _backupData: agora };
+
+    // Guarda backup com timestamp
+    const backups = JSON.parse(localStorage.getItem('beautybot_backups') || '[]');
+    backups.unshift({ data: agora, config: dadosBackup });
+
+    // Mantém só os últimos 3 backups
+    const backupsLimitados = backups.slice(0, 3);
+    localStorage.setItem('beautybot_backups', JSON.stringify(backupsLimitados));
+
+    // Actualiza o status no rodapé
+    const el = document.getElementById('backup-status');
+    if (el) {
+      const hora = new Date().toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' });
+      el.textContent = `Backup automático: ${hora}`;
+    }
+  } catch(e) {
+    console.warn('Backup automático falhou:', e);
+  }
+}
+
+// ──────────────────────────────────────────────────
+// VERIFICAR MIGRAÇÃO — tenta recuperar dados se a
+// chave principal estiver vazia mas existirem backups
+// ──────────────────────────────────────────────────
+function verificarMigracao() {
+  const configActual = localStorage.getItem('beautybot_config');
+
+  // Se já tem dados, não precisa de migrar
+  if (configActual) {
+    try {
+      const c = JSON.parse(configActual);
+      if (c.nomeNegocio || (c.servicos && c.servicos.length)) return;
+    } catch(e) {}
+  }
+
+  // Tenta recuperar do backup automático mais recente
+  try {
+    const backups = JSON.parse(localStorage.getItem('beautybot_backups') || '[]');
+    if (backups.length > 0) {
+      const maisRecente = backups[0];
+      const diff = Date.now() - new Date(maisRecente.data).getTime();
+      const diasAtras = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (confirm(`Foram encontrados dados de backup de ${diasAtras === 0 ? 'hoje' : `${diasAtras} dia(s) atrás`} (${maisRecente.config.nomeNegocio || 'configuração anterior'}).
+
+Desejas restaurar?`)) {
+        localStorage.setItem('beautybot_config', JSON.stringify(maisRecente.config));
+        mostrarToast('✓ Dados restaurados do backup!');
+        setTimeout(() => location.reload(), 1200);
+      }
+    }
+  } catch(e) {
+    console.warn('Verificação de migração falhou:', e);
+  }
+}
+
+window.onload=function(){
+  // 1. Verifica se precisa de recuperar dados
+  verificarMigracao();
+
+  // 2. Carrega configuração
+  carregarConfig();
+  renderDias();
+  renderServicos();
+  renderMarcacoes();
+
+  // 3. Activa backup automático a cada 2 minutos
+  setInterval(fazerBackupAutomatico, 2 * 60 * 1000);
+
+  // 4. Faz backup imediato ao carregar
+  setTimeout(fazerBackupAutomatico, 3000);
+};
+</script>
+</body>
+</html>
