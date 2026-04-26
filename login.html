@@ -469,16 +469,22 @@ async function signupEmail() {
     password,
     options: {
       data: { full_name: name, clinic_name: clinic },
-      emailRedirectTo: window.location.origin + '/login.html'
+      emailRedirectTo: window.location.origin + '/dashboard.html'
     }
   });
   setLoading('btn-signup', false);
 
   if (error) return showAlert(error.message);
 
+  // Guarda email para mostrar na página de confirmação
+  sessionStorage.setItem('bb_signup_email', email);
+  localStorage.setItem('bb_signup_email', email);
+
   if (data.user && !data.session) {
-    showAlert('✅ Confirma o teu email para activar a conta!', 'success');
+    // Precisa confirmar email → vai para página de confirmação
+    window.location.href = '/confirmar-email.html';
   } else if (data.session) {
+    // Já está autenticado (confirm email desligado)
     await redirectAfterLogin(data.session);
   }
 }

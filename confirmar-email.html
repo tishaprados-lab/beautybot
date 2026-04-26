@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirma o teu email — BeautyBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: linear-gradient(135deg, #fdf0f2 0%, #f5eeff 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.card {
+  background: white;
+  border-radius: 24px;
+  padding: 48px 40px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(196,115,127,.15);
+}
+.icon {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, #c4737f, #b89fce);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 24px;
+}
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #c4737f;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #c4737f, #b89fce);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 13px;
+}
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #1a1014;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+p {
+  color: #8a7078;
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+.email-box {
+  background: #faf9f7;
+  border: 1px solid #f0e8e0;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 24px 0;
+  font-size: 14px;
+  color: #1a1014;
+}
+.email-box strong { color: #c4737f; }
+.steps {
+  text-align: left;
+  margin: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  color: #5a5058;
+}
+.step-num {
+  width: 24px; height: 24px;
+  background: linear-gradient(135deg, #c4737f, #b89fce);
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #c4737f, #b89fce);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  margin-top: 24px;
+  transition: opacity .2s;
+}
+.btn:hover { opacity: .9; }
+.btn-ghost {
+  background: none;
+  color: #c4737f;
+  border: 1.5px solid #c4737f;
+  margin-top: 10px;
+  font-size: 14px;
+}
+.note {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <span class="logo-mark">B</span>
+    BeautyBot
+  </div>
+
+  <div class="icon">📧</div>
+
+  <h1>Confirma o teu email!</h1>
+  <p>Enviámos um email de confirmação para:</p>
+
+  <div class="email-box">
+    <strong id="email-display">o teu email</strong>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">1</span>
+      <span>Abre a tua caixa de entrada</span>
+    </div>
+    <div class="step">
+      <span class="step-num">2</span>
+      <span>Procura um email de <strong>noreply@beautybot.pt</strong></span>
+    </div>
+    <div class="step">
+      <span class="step-num">3</span>
+      <span>Clica em <strong>"Confirmar email"</strong> e começa a usar o BeautyBot!</span>
+    </div>
+  </div>
+
+  <a href="/login.html" class="btn">Já confirmei → Entrar</a>
+  <button class="btn btn-ghost" onclick="reenviar()">Reenviar email</button>
+
+  <p class="note">Não encontras o email? Verifica a pasta de spam ou lixo.</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Mostra o email guardado
+const email = sessionStorage.getItem('bb_signup_email') || localStorage.getItem('bb_signup_email') || '';
+if (email) document.getElementById('email-display').textContent = email;
+
+const SUPABASE_URL = 'https://cdhtcfvvxktouvusyosu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMTE1MTAsImV4cCI6MjA5MjY4NzUxMH0.pf7uOp1fJJzCKYIarr1qF5uQ_iA1Rjh2XtWQYOTm-xk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function reenviar() {
+  if (!email) return alert('Email não encontrado. Volta ao registo.');
+  const { error } = await sb.auth.resend({ type: 'signup', email });
+  if (error) alert('Erro: ' + error.message);
+  else alert('✅ Email reenviado! Verifica a caixa de entrada.');
+}
+</script>
+</body>
+</html>
