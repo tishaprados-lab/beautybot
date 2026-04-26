@@ -231,6 +231,7 @@ Veja eventos em tempo real:
 - [ ] Adicionar portal de gerenciamento de assinatura (Stripe Customer Portal)
 - [ ] Implementar notificações por email quando voucher é usado
 
+
 ## 🎉 Pronto!
 
 Agora você tem:
