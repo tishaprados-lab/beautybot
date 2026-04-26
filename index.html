@@ -719,14 +719,31 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
   .pricing-grid { grid-template-columns: 1fr; }
 }
 @media(max-width:600px){
-  .hero-h1 { font-size: 44px; letter-spacing: -1.5px; }
-  .hero-ctas { flex-direction: column; align-items: flex-start; }
+  .hero-h1 { font-size: 36px; letter-spacing: -1px; }
+  .hero-sub { font-size: 15px; }
+  .hero-ctas { flex-direction: column; align-items: stretch; gap: 10px; }
+  .btn-hero-main, .btn-hero-sec { width: 100%; text-align: center; box-sizing: border-box; }
   .features-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
-  .cta-btns { flex-direction: column; align-items: center; }
+  .cta-btns { flex-direction: column; align-items: stretch; gap: 10px; }
+  .cta-btns a, .cta-btns button { width: 100%; text-align: center; box-sizing: border-box; }
   .footer-top { grid-template-columns: 1fr; }
-  .footer-bottom { flex-direction: column; text-align: center; }
-  section { padding: 64px 5%; }
+  .footer-bottom { flex-direction: column; text-align: center; gap: 12px; }
+  section { padding: 56px 5%; }
+  .plans-grid { grid-template-columns: 1fr; }
+  .plan-card { max-width: 100%; }
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .channels-grid { grid-template-columns: 1fr 1fr; }
+  .hero-badges { flex-wrap: wrap; gap: 8px; }
+  .hero-badge { flex: 1; min-width: 140px; }
+  .nav-links { display: none; }
+  .nav-right .btn-nav-outline { display: none; }
+  h2 { font-size: 28px !important; }
+  .cb-widget { width: calc(100vw - 48px); max-width: 340px; }
+}
+@media(max-width:380px){
+  .hero-h1 { font-size: 30px; }
+  .channels-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
