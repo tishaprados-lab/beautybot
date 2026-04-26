@@ -9,6 +9,7 @@ Guia completo para configurar pagamentos Stripe e sistema de vouchers no BeautyB
 - `vouchers` - Códigos de desconto configuráveis
 - `voucher_uses` - Histórico de uso de vouchers
 
+ 
 ✅ **APIs Serverless (Vercel):**
 - `/api/stripe-checkout` - Cria sessão de checkout
 - `/api/stripe-webhook` - Processa eventos do Stripe
