@@ -741,6 +741,59 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
   h2 { font-size: 28px !important; }
   .cb-widget { width: calc(100vw - 48px); max-width: 340px; }
 }
+
+   @media(max-width:600px){
+
+  #nav {
+    height: auto;
+    min-height: 104px;
+    padding: 10px 5% 12px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "logo burger"
+      "cta cta";
+    row-gap: 8px;
+    align-items: center;
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(12px);
+  }
+
+  .nav-logo {
+    grid-area: logo;
+    color: var(--text-dark);
+  }
+
+  .nav-right {
+    display: contents;
+  }
+
+  .nav-burger {
+    grid-area: burger;
+    display: block;
+    color: var(--text-dark);
+    justify-self: end;
+  }
+
+  .nav-right .btn-nav-outline {
+    display: none;
+  }
+
+  .nav-right .btn-nav-fill {
+    grid-area: cta;
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: var(--rose);
+    color: white;
+    padding: 12px 24px;
+    border-radius: var(--r-pill);
+  }
+
+  #hero {
+    padding-top: 104px;
+  }
+}
 @media(max-width:380px){
   .hero-h1 { font-size: 30px; }
   .channels-grid { grid-template-columns: 1fr; }
