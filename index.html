@@ -740,6 +740,24 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
   .nav-right .btn-nav-outline { display: none; }
   h2 { font-size: 28px !important; }
   .cb-widget { width: calc(100vw - 48px); max-width: 340px; }
+
+@media (max-width: 600px) {
+  .mobile-scroll-cta {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+  }
+
+  .mobile-scroll-cta.show-on-scroll {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+}
+
 }
 
    @media(max-width:600px){
@@ -815,7 +833,7 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
   </ul>
   <div class="nav-right">
     <a href="/dashboard.html" class="btn-nav-outline">ENTRAR</a>
-    <a href="#cta" class="btn-nav-fill">COMECE AGORA</a>
+    <a href="#cta" class="btn-nav-fill mobile-scroll-cta">COMECE AGORA</a>
   </div>
   <button class="nav-burger" onclick="toggleNav()">☰</button>
 </nav>
@@ -1245,6 +1263,35 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   });
 });
 </script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const mobileCta = document.querySelector('.mobile-scroll-cta');
+
+    if (!mobileCta) return;
+
+    function toggleMobileCta() {
+      const isMobile = window.innerWidth <= 600;
+
+      if (!isMobile) {
+        mobileCta.classList.remove('show-on-scroll');
+        return;
+      }
+
+      if (window.scrollY > 70) {
+        mobileCta.classList.add('show-on-scroll');
+      } else {
+        mobileCta.classList.remove('show-on-scroll');
+      }
+    }
+
+    window.addEventListener('scroll', toggleMobileCta);
+    window.addEventListener('resize', toggleMobileCta);
+
+    toggleMobileCta();
+  });
+</script>
+   
 </body>
 </html>
 
