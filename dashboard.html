@@ -190,6 +190,75 @@ if (Object.keys(safeConfig).length > 0) {
     }
   }
 })();
+
+ //chat
+ function atualizarEstadoIA() {
+  const st = document.getElementById('api-status');
+  const cta = document.getElementById('trial-cta');
+
+  if (!st || !cta) return;
+
+  const profile = window._beautyProfile;
+  const access = window._hasAiAccess;
+
+  if (!profile) {
+    st.className = 'api-status nok';
+    st.textContent = '⚠️ Não foi possível verificar o plano';
+    return;
+  }
+
+  const trialEnd = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null;
+  const now = new Date();
+
+  const isTrial =
+    profile.plan_status === 'trial' &&
+    trialEnd &&
+    trialEnd > now;
+
+  const isPaid =
+    profile.plan_status === 'active' &&
+    ['essential', 'premium', 'agency'].includes(profile.plan);
+
+  if (isPaid) {
+    st.className = 'api-status ok';
+    st.textContent = `✅ IA ativa — plano ${profile.plan}`;
+    cta.style.display = 'none';
+    return;
+  }
+
+  if (isTrial) {
+    const diffMs = trialEnd.getTime() - now.getTime();
+    const diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    st.className = 'api-status ok';
+    st.textContent = `✅ IA ativa — teste gratuito, ${diasRestantes} dia(s) restante(s)`;
+
+    cta.style.display = 'block';
+    cta.innerHTML = `
+      <b>Teste gratuito ativo</b><br>
+      Estás a experimentar o BeautyBot com IA durante 14 dias.
+      Para manter a IA ativa após o teste, escolhe o plano <b>ESSENCIAL</b>.<br><br>
+      <a href="/checkout.html?plan=essential"
+         style="display:inline-block;background:var(--accent);color:white;text-decoration:none;padding:9px 14px;border-radius:8px;font-weight:600">
+         Escolher plano ESSENCIAL →
+      </a>
+    `;
+    return;
+  }
+
+  st.className = 'api-status nok';
+  st.textContent = '⚠️ Teste expirado — IA desativada';
+
+  cta.style.display = 'block';
+  cta.innerHTML = `
+    <b>O teste gratuito terminou</b><br>
+    Para voltar a usar a IA do BeautyBot, ativa o plano <b>ESSENCIAL</b>.<br><br>
+    <a href="/checkout.html?plan=essential"
+       style="display:inline-block;background:var(--accent);color:white;text-decoration:none;padding:9px 14px;border-radius:8px;font-weight:600">
+       Ativar plano ESSENCIAL →
+    </a>
+  `;
+}
 </script>
 
 <div id="sidebar">
@@ -1091,6 +1160,9 @@ window.onload=function(){
 
   // 4. Faz backup imediato ao carregar
   setTimeout(fazerBackupAutomatico, 3000);
+
+ //chat
+ setTimeout(atualizarEstadoIA, 800);
 };
 </script>
 </body>
