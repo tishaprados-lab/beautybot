@@ -797,15 +797,56 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
     display: none;
   }
 
-  .nav-right .btn-nav-fill {
+  @media (max-width: 600px) {
+  #nav {
+    transition: min-height 0.25s ease, padding 0.25s ease;
+  }
+
+  /* Estado inicial: nav compacta, só logo + menu */
+  #nav.nav-compact {
+    min-height: 64px;
+    padding: 10px 5%;
+    grid-template-areas: "logo burger";
+    grid-template-columns: 1fr auto;
+    row-gap: 0;
+  }
+
+  #nav.nav-compact .nav-right {
+    display: none;
+  }
+
+  /* Estado depois do scroll: aparece o botão */
+  #nav.nav-with-cta {
+    min-height: 104px;
+    padding: 10px 5% 12px;
+    grid-template-areas:
+      "logo burger"
+      "cta cta";
+    grid-template-columns: 1fr auto;
+    row-gap: 8px;
+  }
+
+  #nav.nav-with-cta .nav-right {
     grid-area: cta;
-    display: block;
+    display: flex;
     width: 100%;
-    text-align: center;
-    background: var(--rose);
-    color: white;
-    padding: 12px 24px;
-    border-radius: var(--r-pill);
+    justify-content: center;
+  }
+
+  #nav.nav-with-cta .btn-nav-outline {
+    display: none;
+  }
+
+  .mobile-scroll-cta {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
   }
 
   #hero {
@@ -1266,29 +1307,33 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+    const nav = document.getElementById('nav');
     const mobileCta = document.querySelector('.mobile-scroll-cta');
 
-    if (!mobileCta) return;
+    if (!nav || !mobileCta) return;
 
-    function toggleMobileCta() {
+    function atualizarNavMobile() {
       const isMobile = window.innerWidth <= 600;
+      const passouDoTopo = window.scrollY > 40;
 
       if (!isMobile) {
-        mobileCta.classList.remove('show-on-scroll');
+        nav.classList.remove('nav-compact', 'nav-with-cta');
         return;
       }
 
-      if (window.scrollY > 70) {
-        mobileCta.classList.add('show-on-scroll');
+      if (passouDoTopo) {
+        nav.classList.remove('nav-compact');
+        nav.classList.add('nav-with-cta');
       } else {
-        mobileCta.classList.remove('show-on-scroll');
+        nav.classList.remove('nav-with-cta');
+        nav.classList.add('nav-compact');
       }
     }
 
-    window.addEventListener('scroll', toggleMobileCta);
-    window.addEventListener('resize', toggleMobileCta);
+    window.addEventListener('scroll', atualizarNavMobile);
+    window.addEventListener('resize', atualizarNavMobile);
 
-    toggleMobileCta();
+    atualizarNavMobile();
   });
 </script>
    
