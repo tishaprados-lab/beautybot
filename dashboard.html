@@ -301,18 +301,19 @@
           </div>
           <div id="api-status" class="api-status nok">⚠️ Não configurada — chatbot em modo simulado</div>
         </div>
-        <div class="info-box">
-          <b>Como obter a API Key:</b><br>
-          1. Acede a <b>console.anthropic.com</b><br>
-          2. Cria conta e adiciona crédito (mínimo $20)<br>
-          3. Vai a <b>API Keys → Create Key</b><br>
-          4. Cola a key aqui e guarda as configurações<br><br>
-          <b>🔒 Em produção (beautybot.pt):</b><br>
-          A chave é configurada nas variáveis de ambiente do Vercel
-          (Settings → Environment Variables → ANTHROPIC_API_KEY).
-          Não fica exposta no código nem no browser — é 100% segura.
-          O campo acima é usado apenas em desenvolvimento local.
-        </div>
+        <div class="card">
+  <div class="card-title">⚡ IA do BeautyBot</div>
+  <p class="section-subtitle">
+    O seu acesso foi bem sucedido.
+ 
+  </p>
+
+  <div id="api-status" class="api-status nok">
+    A verificar acesso à IA...
+  </div>
+
+  <div id="trial-cta" class="info-box" style="display:none"></div>
+</div>
       </div>
       <div class="card">
         <div class="card-title">💾 Segurança dos Dados</div>
@@ -521,8 +522,13 @@ let config = {
   nomeNegocio:'', nomeAssistente:'', telefone:'', email:'', morada:'',
   msgBoasVindas:'', msgMarcacao:'', corPrincipal:'#c9956a', logoBase64:'',
   servicos:[], diasAtivos:[1,2,3,4,5], horaAbertura:'09:00', horaFecho:'20:00',
-  duracaoPadrao:60, marcacoes:[], apiKey:'', pesquisaAtiva:false, contexto:''
+  duracaoPadrao:60, marcacoes:[], pesquisaAtiva:false, contexto:''
 };
+
+let currentProfile = null;
+let hasAiAccess = false;
+
+ 
 let emojiSelecionado = '💆';
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const topbarTitles = {
@@ -802,8 +808,7 @@ function atualizarPreview(){
   document.getElementById('pi-assistente').textContent=config.nomeAssistente||'—';
   document.getElementById('pi-servicos').textContent=config.servicos.length;
   document.getElementById('pi-protocolos').textContent=config.servicos.filter(s=>s.indicacoes||s.pre||s.pos).length;
-  document.getElementById('pi-api').textContent=config.apiKey?'✅ Configurada':'❌ Não configurada';
-  document.getElementById('pi-horario').textContent=config.horaAbertura&&config.horaFecho?config.horaAbertura+' – '+config.horaFecho:'—';
+    document.getElementById('pi-horario').textContent=config.horaAbertura&&config.horaFecho?config.horaAbertura+' – '+config.horaFecho:'—';
   const msgs=document.getElementById('preview-msgs');
   if(!msgs.children.length){
     const msg=config.msgBoasVindas||`Olá! Sou ${config.nomeAssistente||'a assistente'} de ${config.nomeNegocio||'o nosso espaço'}. Como posso ajudar?`;
@@ -867,7 +872,6 @@ function lerFormulario(){
   config.horaAbertura=document.getElementById('hora-abertura').value;
   config.horaFecho=document.getElementById('hora-fecho').value;
   config.duracaoPadrao=parseInt(document.getElementById('duracao-padrao').value);
-  config.apiKey=document.getElementById('api-key').value.trim();
   config.pesquisaAtiva=document.getElementById('pesquisa-ativa').checked;
   config.contexto=document.getElementById('contexto-pesquisa').value;
 }
