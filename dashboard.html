@@ -151,21 +151,38 @@
     window._supabaseSession = session;
     window._supabase = sb;
     // Carrega os dados guardados na BD para este utilizador
-    const { data: profile } = await sb.from('profiles').select('chatbot_config, plan_status, trial_ends_at').eq('id', session.user.id).single();
+    const { data: profile } = await sb.from('profiles').select('chatbot_config, plan, plan_status, trial_ends_at').eq('id', session.user.id).single();
     if (profile) {
       // Verifica trial
-      if (profile.plan_status === 'trial' && profile.trial_ends_at) {
-        const trialEnd = new Date(profile.trial_ends_at);
-        if (trialEnd < new Date()) {
-          // Trial expirado — mostra aviso mas não bloqueia ainda
-          setTimeout(() => {
-            const banner = document.createElement('div');
-            banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:white;text-align:center;padding:12px;font-size:14px;font-weight:600;z-index:9999';
-            banner.innerHTML = '⚠️ O teu trial de 14 dias expirou. <a href="/signup.html#upgrade" style="color:white;text-decoration:underline;margin-left:8px">Escolher um plano →</a>';
-            document.body.prepend(banner);
-          }, 500);
-        }
-      }
+      if (profile.plan_status === 'trial' && profile.trial_ends_at) 
+      {currentProfile = profile;
+window._beautyProfile = profile;
+
+const trialEnd = profile.trial_ends_at ? new Date(profile.trial_ends_at) : null;
+const now = new Date();
+
+const isTrialActive =
+  profile.plan_status === 'trial' &&
+  trialEnd &&
+  trialEnd > now;
+
+const isPaidActive =
+  profile.plan_status === 'active' &&
+  ['essential', 'premium', 'agency'].includes(profile.plan);
+
+hasAiAccess = isTrialActive || isPaidActive;
+window._hasAiAccess = hasAiAccess;
+
+let safeConfig = profile.chatbot_config || {};
+delete safeConfig.apiKey;
+
+if (!hasAiAccess) {
+  safeConfig.pesquisaAtiva = false;
+}
+
+if (Object.keys(safeConfig).length > 0) {
+  localStorage.setItem('beautybot_config', JSON.stringify(safeConfig));
+}      }
       // Carrega config guardada na BD
       if (profile.chatbot_config && Object.keys(profile.chatbot_config).length > 0) {
         localStorage.setItem('beautybot_config', JSON.stringify(profile.chatbot_config));
@@ -876,19 +893,33 @@ function lerFormulario(){
   config.contexto=document.getElementById('contexto-pesquisa').value;
 }
 
+function limparConfigSensivel(c) {
+  const limpo = { ...c };
+
+  // Nunca guardar API Key no browser nem na BD do cliente
+  delete limpo.apiKey;
+
+  // Se o cliente não tem acesso à IA, desliga pesquisa online
+  if (!hasAiAccess) {
+    limpo.pesquisaAtiva = false;
+  }
+
+  return limpo;
+}
+ 
 function salvarTudo(){
   lerFormulario();
-  localStorage.setItem('beautybot_config',JSON.stringify(config));
 
-  // Guarda também na base de dados Supabase
-  salvarNaBD(config);
+  const configSegura = limparConfigSensivel(config);
 
-  // Faz backup automático sempre que guarda
+  localStorage.setItem('beautybot_config', JSON.stringify(configSegura));
+
+  salvarNaBD(configSegura);
+
   fazerBackupAutomatico();
 
-  const st=document.getElementById('api-status');
-  if(config.apiKey){st.className='api-status ok';st.textContent='✅ API Key configurada — IA real ativa';}
-  else{st.className='api-status nok';st.textContent='⚠️ Não configurada — modo simulado';}
+  atualizarEstadoIA();
+
   mostrarToast('✓ Configurações guardadas e backup feito!');
 }
 
@@ -905,13 +936,12 @@ function carregarConfig(){
     document.getElementById('msg-marcacao').value=c.msgMarcacao||'';
     document.getElementById('hora-abertura').value=c.horaAbertura||'09:00';
     document.getElementById('hora-fecho').value=c.horaFecho||'20:00';
-    document.getElementById('api-key').value=c.apiKey||'';
-    document.getElementById('pesquisa-ativa').checked=c.pesquisaAtiva||false;
+        document.getElementById('pesquisa-ativa').checked=c.pesquisaAtiva||false;
     document.getElementById('pesquisa-label').textContent=c.pesquisaAtiva?'Ativada':'Desativada';
     document.getElementById('contexto-pesquisa').value=c.contexto||'';
     if(c.corPrincipal){document.getElementById('cor-custom').value=c.corPrincipal;document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.color===c.corPrincipal));}
     if(c.logoBase64){document.getElementById('logo-preview').src=c.logoBase64;document.getElementById('logo-preview').style.display='block';document.getElementById('logo-text').style.display='none';}
-    if(c.apiKey){const st=document.getElementById('api-status');st.className='api-status ok';st.textContent='✅ API Key configurada';}
+    
   }catch(e){}
 }
 
