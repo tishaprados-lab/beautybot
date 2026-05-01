@@ -152,7 +152,7 @@
     window._supabase = sb;
     // Carrega os dados guardados na BD para este utilizador
     const { data: profile } = await sb.from('profiles').select('chatbot_config, plan, plan_status, trial_ends_at').eq('id', session.user.id).single();
-    if (profile) {
+    if (profile) { await sb.rpc('expire_trials');
       // Verifica trial
       if (profile.plan_status === 'trial' && profile.trial_ends_at) 
       {currentProfile = profile;
