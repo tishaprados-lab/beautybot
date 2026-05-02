@@ -1200,7 +1200,7 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
         </ul>
              
          <!-- PLANO ESSENCIAL (€97/mês) -->
-<button id="btn-essencial" class="plan-btn outline">Começar grátis 14 dias</button>
+<button id="btn-essencial" class="btn-pricing" style="background: linear-gradient(135deg, var(--rose), var(--lilac)); color: white; border: none; padding: 1rem 2rem; border-radius: 50px; font-family: 'Syne', sans-serif; font-weight: 600; cursor: pointer;">Começar agora</button>
 
          
       </div>
@@ -1220,7 +1220,7 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
           <li class="lilac">Suporte prioritário 24h</li>
         </ul>
     <!-- PLANO PREMIUM (€197/mês) -->
-<button id="btn-premium" class="plan-btn fill">Começar agora</button>
+<button id="btn-premium" class="btn-pricing" style="background: linear-gradient(135deg, var(--lilac), var(--nude)); color: white; border: none; padding: 1rem 2rem; border-radius: 50px; font-family: 'Syne', sans-serif; font-weight: 600; cursor: pointer;">Começar agora</button>
 
       </div>
       <div class="plan r d3">
@@ -1482,7 +1482,53 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   });
 })();
 </script>
-   
+
+
+   //02 may 26
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function() {
+  const supabase = window.supabase.createClient(
+    'https://cdhtcfvvxktouvusyosu.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNzIyMDQsImV4cCI6MjA5MjY0ODIwNH0.V5iQaE5rwfvBNOpJZp4OMPqq4mPQc4t0KbSzBGMm5kY'
+  );
+
+  async function checkout(planType) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      alert('Por favor, faça login primeiro.');
+      window.location.href = '/login.html';
+      return;
+    }
+
+    const btn = document.getElementById(`btn-${planType}`);
+    btn.textContent = 'A processar...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/stripe-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planType, userId: user.id })
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else throw new Error(data.error);
+    } catch (err) {
+      alert('Erro: ' + err.message);
+      btn.textContent = 'Começar agora';
+      btn.disabled = false;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const btnE = document.getElementById('btn-essencial');
+    const btnP = document.getElementById('btn-premium');
+    if (btnE) btnE.onclick = () => checkout('essential');
+    if (btnP) btnP.onclick = () => checkout('premium');
+  });
+})();
+</script>
 </body>
 </html>
 
