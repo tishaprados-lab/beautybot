@@ -659,6 +659,8 @@ section { padding: 96px 5%; }
 .btn-cta-ghost:hover { background: rgba(255,255,255,.25); border-color: white; }
 .cta-note { font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,.5); margin-top: 20px; }
 
+
+
 /* ═══════════════════════════════════════════
    FOOTER — very light nude
 ═══════════════════════════════════════════ */
@@ -1196,7 +1198,11 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
           <li class="rose">Histórico persistente por cliente</li>
           <li class="rose">1 canal de atendimento</li>
         </ul>
-        <a href="/login.html" class="plan-btn outline">Começar grátis 14 dias</a>
+             
+         <!-- PLANO ESSENCIAL (€97/mês) -->
+<button id="btn-essencial" class="plan-btn outline">Começar grátis 14 dias</button>
+
+         
       </div>
       <div class="plan featured r d2">
         <div class="plan-badge">✦ Mais escolhido</div>
@@ -1213,7 +1219,9 @@ footer { background: var(--offwhite); border-top: 1px solid rgba(0,0,0,.08); pad
           <li class="lilac">Relatórios de conversas</li>
           <li class="lilac">Suporte prioritário 24h</li>
         </ul>
-        <a href="/login.html" class="plan-btn fill">Começar agora</a>
+    <!-- PLANO PREMIUM (€197/mês) -->
+<button id="btn-premium" class="plan-btn fill">Começar agora</button>
+
       </div>
       <div class="plan r d3">
         <div class="plan-name nude">Agência</div>
@@ -1335,6 +1343,144 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
     atualizarNavMobile();
   });
+</script>
+
+<script>
+
+   // ===========================================
+// BEAUTYBOT STRIPE CHECKOUT INTEGRATION
+// ===========================================
+
+(function() {
+  'use strict';
+
+  // Verificar se o utilizador está autenticado
+  function isUserAuthenticated() {
+    const session = localStorage.getItem('supabase.auth.token');
+    return session !== null;
+  }
+
+  // Obter user_id do Supabase
+  async function getUserId() {
+    try {
+      const { createClient } = supabase;
+      const supabaseClient = createClient(
+        'https://cdhtcfvvxktouvusyosu.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNzIyMDQsImV4cCI6MjA5MjY0ODIwNH0.V5iQaE5rwfvBNOpJZp4OMPqq4mPQc4t0KbSzBGMm5kY'
+      );
+
+      const { data: { user }, error } = await supabaseClient.auth.getUser();
+      
+      if (error || !user) {
+        console.error('Erro ao obter utilizador:', error);
+        return null;
+      }
+      
+      return user.id;
+    } catch (err) {
+      console.error('Erro ao obter userId:', err);
+      return null;
+    }
+  }
+
+  // Criar Checkout Session
+  async function createCheckoutSession(planType) {
+    const userId = await getUserId();
+    
+    if (!userId) {
+      alert('Por favor, faça login para continuar.');
+      window.location.href = '/login.html';
+      return;
+    }
+
+    try {
+      // Mostrar loading
+      const btn = document.getElementById(`btn-${planType}`);
+      const originalText = btn.textContent;
+      btn.textContent = 'A processar...';
+      btn.disabled = true;
+
+      // Chamar API
+      const response = await fetch('/api/stripe-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planType: planType,
+          userId: userId,
+          voucherCode: null // Pode adicionar lógica de voucher depois
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar checkout');
+      }
+
+      // Redirecionar para Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('URL de checkout não recebido');
+      }
+
+    } catch (error) {
+      console.error('Erro no checkout:', error);
+      alert('Erro ao processar pagamento. Por favor, tente novamente.');
+      
+      // Restaurar botão
+      const btn = document.getElementById(`btn-${planType}`);
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  }
+
+  // Event Listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    // Botão Essencial
+    const btnEssencial = document.getElementById('btn-essencial');
+    if (btnEssencial) {
+      btnEssencial.addEventListener('click', function(e) {
+        e.preventDefault();
+        createCheckoutSession('essential');
+      });
+    }
+
+    // Botão Premium
+    const btnPremium = document.getElementById('btn-premium');
+    if (btnPremium) {
+      btnPremium.addEventListener('click', function(e) {
+        e.preventDefault();
+        createCheckoutSession('premium');
+      });
+    }
+
+    // Verificar sucesso do checkout (após redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      const sessionId = urlParams.get('session_id');
+      
+      // Mostrar mensagem de sucesso
+      alert('🎉 Pagamento confirmado! Bem-vinda ao BeautyBot.');
+      
+      // Limpar URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Redirecionar para dashboard
+      setTimeout(() => {
+        window.location.href = '/dashboard.html';
+      }, 2000);
+    }
+
+    // Verificar cancelamento
+    if (urlParams.get('canceled') === 'true') {
+      alert('Pagamento cancelado. Pode tentar novamente quando quiser.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  });
+})();
 </script>
    
 </body>
