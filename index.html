@@ -1529,6 +1529,168 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   });
 })();
 </script>
+
+//03 may 2026 strp
+   <!-- ========================================
+     BEAUTYBOT STRIPE INTEGRATION
+     ======================================== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function() {
+  'use strict';
+
+  console.log('🚀 BeautyBot Stripe Integration loading...');
+
+  // Inicializar Supabase
+  const supabaseUrl = 'https://cdhtcfvvxktouvusyosu.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNzIyMDQsImV4cCI6MjA5MjY0ODIwNH0.V5iQaE5rwfvBNOpJZp4OMPqq4mPQc4t0KbSzBGMm5kY';
+  
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+  // Obter utilizador autenticado
+  async function getUserId() {
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error) {
+        console.error('❌ Erro ao obter utilizador:', error);
+        return null;
+      }
+      
+      if (!user) {
+        console.log('⚠️ Utilizador não autenticado');
+        return null;
+      }
+      
+      console.log('✅ Utilizador autenticado:', user.id);
+      return user.id;
+    } catch (err) {
+      console.error('❌ Excepção ao obter userId:', err);
+      return null;
+    }
+  }
+
+  // Criar sessão de checkout Stripe
+  async function createCheckoutSession(planType) {
+    console.log('💳 Iniciando checkout para plano:', planType);
+    
+    const userId = await getUserId();
+    
+    if (!userId) {
+      alert('Por favor, faça login primeiro.');
+      window.location.href = '/login.html';
+      return;
+    }
+
+    // Botão loading state
+    const btn = document.getElementById('btn-' + planType);
+    if (!btn) {
+      console.error('❌ Botão não encontrado: btn-' + planType);
+      return;
+    }
+
+    const originalText = btn.textContent;
+    btn.textContent = 'A processar...';
+    btn.disabled = true;
+
+    try {
+      console.log('📡 Chamando API /api/stripe-checkout...');
+
+      const response = await fetch('/api/stripe-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planType: planType,
+          userId: userId,
+          voucherCode: null
+        })
+      });
+
+      console.log('📥 Resposta recebida, status:', response.status);
+
+      const data = await response.json();
+      console.log('📦 Dados:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar checkout');
+      }
+
+      if (data.url) {
+        console.log('✅ Redirecionando para Stripe:', data.url);
+        window.location.href = data.url;
+      } else {
+        throw new Error('URL de checkout não recebido');
+      }
+
+    } catch (error) {
+      console.error('❌ Erro no checkout:', error);
+      alert('Erro ao processar pagamento: ' + error.message);
+      
+      // Restaurar botão
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  }
+
+  // Event listeners quando DOM carregar
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM carregado, a procurar botões...');
+
+    // Botão Essencial
+    const btnEssencial = document.getElementById('btn-essencial');
+    if (btnEssencial) {
+      console.log('✅ Botão Essencial encontrado');
+      btnEssencial.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🖱️ Click em Essencial');
+        createCheckoutSession('essential');
+      });
+    } else {
+      console.error('❌ Botão btn-essencial NÃO encontrado!');
+    }
+
+    // Botão Premium
+    const btnPremium = document.getElementById('btn-premium');
+    if (btnPremium) {
+      console.log('✅ Botão Premium encontrado');
+      btnPremium.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🖱️ Click em Premium');
+        createCheckoutSession('premium');
+      });
+    } else {
+      console.error('❌ Botão btn-premium NÃO encontrado!');
+    }
+
+    // Verificar sucesso do checkout
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      console.log('🎉 Pagamento confirmado!');
+      alert('🎉 Pagamento confirmado! Bem-vinda ao BeautyBot.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(function() {
+        window.location.href = '/dashboard.html';
+      }, 2000);
+    }
+
+    // Verificar cancelamento
+    if (urlParams.get('canceled') === 'true') {
+      console.log('⚠️ Pagamento cancelado');
+      alert('Pagamento cancelado. Pode tentar novamente quando quiser.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    console.log('✅ BeautyBot Stripe Integration loaded successfully!');
+  });
+})();
+</script>
+<!-- FIM BEAUTYBOT STRIPE INTEGRATION -->
+
+   
 </body>
 </html>
 
