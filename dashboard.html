@@ -1165,5 +1165,394 @@ window.onload=function(){
  setTimeout(atualizarEstadoIA, 800);
 };
 </script>
+
+
+<!-- ============================================ -->
+<!-- ADICIONAR ESTA SECÇÃO AO dashboard.html    -->
+<!-- ============================================ -->
+
+<div class="dashboard-section" id="installation-section">
+  <h2>📦 Instalação no Website</h2>
+  <p class="section-description">
+    Cole este código no seu website, antes da tag <code>&lt;/body&gt;</code>
+  </p>
+  
+  <!-- PREVIEW DO WIDGET -->
+  <div class="widget-preview">
+    <div class="preview-info">
+      <h3>🎨 Pré-visualização</h3>
+      <p>Veja como o chatbot irá aparecer no seu site:</p>
+      <button onclick="testWidget()" class="btn-secondary">
+        🔍 Testar Widget
+      </button>
+    </div>
+  </div>
+  
+  <!-- CÓDIGO DE INSTALAÇÃO -->
+  <div class="installation-code">
+    <div class="code-header">
+      <h3>💻 Código de Instalação</h3>
+      <button onclick="copyInstallCode()" class="btn-copy" id="copy-btn">
+        📋 Copiar Código
+      </button>
+    </div>
+    
+    <pre id="install-code" class="code-block"><code>&lt;!-- BeautyBot Widget --&gt;
+&lt;script&gt;
+  (function(w,d,s,o,f,js,fjs){
+    w['BeautyBot']=o;w[o]=w[o]||function(){(w[o].q=w[o].q||[]).push(arguments)};
+    js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+    js.id=o;js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
+  }(window,document,'script','bb','https://beautybot.pt/embed.js'));
+  bb('init', '<span id="user-id-placeholder">SEU_USER_ID</span>');
+&lt;/script&gt;</code></pre>
+  </div>
+  
+  <!-- CUSTOMIZAÇÃO -->
+  <div class="widget-customization">
+    <h3>🎨 Personalização (Opcional)</h3>
+    <p>Adicione opções ao código para personalizar o widget:</p>
+    
+    <div class="custom-options">
+      <div class="option">
+        <label>
+          <input type="checkbox" id="opt-position" onchange="updateInstallCode()">
+          Posição à Esquerda
+        </label>
+      </div>
+      
+      <div class="option">
+        <label>
+          <input type="checkbox" id="opt-autoopen" onchange="updateInstallCode()">
+          Abrir Automaticamente
+        </label>
+      </div>
+      
+      <div class="option">
+        <label>
+          Cor Primária:
+          <input type="color" id="opt-color" value="#C4737F" onchange="updateInstallCode()">
+        </label>
+      </div>
+    </div>
+    
+    <div id="custom-code-preview" style="display: none;">
+      <h4>Código com Personalização:</h4>
+      <pre class="code-block"><code id="custom-code"></code></pre>
+    </div>
+  </div>
+  
+  <!-- INSTRUÇÕES -->
+  <div class="installation-steps">
+    <h3>📝 Instruções de Instalação</h3>
+    <ol>
+      <li>
+        <strong>Copie o código</strong> acima clicando no botão "Copiar Código"
+      </li>
+      <li>
+        <strong>Aceda ao seu website</strong> (WordPress, Wix, Squarespace, ou HTML)
+      </li>
+      <li>
+        <strong>Cole o código antes do <code>&lt;/body&gt;</code></strong>
+        <ul>
+          <li><strong>WordPress:</strong> Appearance → Theme Editor → footer.php</li>
+          <li><strong>Wix:</strong> Settings → Custom Code → Add Code to Body End</li>
+          <li><strong>Squarespace:</strong> Settings → Advanced → Code Injection → Footer</li>
+          <li><strong>HTML:</strong> Edite o ficheiro index.html</li>
+        </ul>
+      </li>
+      <li>
+        <strong>Guarde as alterações</strong> e visite o seu site para testar!
+      </li>
+    </ol>
+  </div>
+  
+  <!-- TROUBLESHOOTING -->
+  <details class="troubleshooting">
+    <summary>❓ Problemas? Clique aqui</summary>
+    <div class="troubleshooting-content">
+      <h4>O widget não aparece:</h4>
+      <ul>
+        <li>✅ Verificou que colou o código antes do <code>&lt;/body&gt;</code>?</li>
+        <li>✅ Limpou a cache do browser? (Ctrl+Shift+R)</li>
+        <li>✅ O seu site tem HTTPS? (obrigatório)</li>
+      </ul>
+      
+      <h4>O chatbot não responde:</h4>
+      <ul>
+        <li>✅ Tem uma subscrição ativa?</li>
+        <li>✅ Configurou o chatbot na secção "Personalização"?</li>
+      </ul>
+      
+      <p>
+        <strong>Ainda com problemas?</strong> 
+        Contacte-nos: <a href="mailto:suporte@beautybot.pt">suporte@beautybot.pt</a>
+      </p>
+    </div>
+  </details>
+</div>
+
+<!-- ============================================ -->
+<!-- ADICIONAR ESTE CSS AO dashboard.html        -->
+<!-- ============================================ -->
+
+<style>
+.dashboard-section {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.section-description {
+  color: #6c757d;
+  margin-bottom: 24px;
+}
+
+.widget-preview {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.preview-info h3 {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.preview-info p {
+  color: #6c757d;
+  margin-bottom: 16px;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.installation-code {
+  margin-bottom: 32px;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.code-header h3 {
+  margin: 0;
+}
+
+.btn-copy {
+  background: #C4737F;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.btn-copy:hover {
+  background: #a85e6a;
+}
+
+.btn-copy.copied {
+  background: #28a745;
+}
+
+.code-block {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.code-block code {
+  color: #333;
+}
+
+#user-id-placeholder {
+  background: #fff3cd;
+  color: #856404;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.widget-customization {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.custom-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.installation-steps {
+  margin-bottom: 32px;
+}
+
+.installation-steps ol {
+  padding-left: 20px;
+}
+
+.installation-steps li {
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.installation-steps ul {
+  margin-top: 8px;
+  padding-left: 20px;
+}
+
+.troubleshooting {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.troubleshooting summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #C4737F;
+}
+
+.troubleshooting-content {
+  padding-top: 16px;
+}
+
+.troubleshooting-content h4 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.troubleshooting-content ul {
+  padding-left: 20px;
+}
+</style>
+
+<!-- ============================================ -->
+<!-- ADICIONAR ESTE JAVASCRIPT AO dashboard.html -->
+<!-- ============================================ -->
+
+<script>
+// Get current user ID from Supabase auth
+let currentUserId = null;
+
+// Update on page load
+async function initInstallation() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    currentUserId = user.id;
+    document.getElementById('user-id-placeholder').textContent = user.id;
+    updateInstallCode();
+  }
+}
+
+// Copy install code
+function copyInstallCode() {
+  const code = document.getElementById('install-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ Copiado!';
+    btn.classList.add('copied');
+    
+    setTimeout(() => {
+      btn.textContent = '📋 Copiar Código';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// Update install code with options
+function updateInstallCode() {
+  if (!currentUserId) return;
+  
+  const position = document.getElementById('opt-position')?.checked;
+  const autoOpen = document.getElementById('opt-autoopen')?.checked;
+  const color = document.getElementById('opt-color')?.value;
+  
+  const hasOptions = position || autoOpen || (color !== '#C4737F');
+  
+  if (hasOptions) {
+    let options = [];
+    if (position) options.push(`position: 'left'`);
+    if (autoOpen) options.push(`autoOpen: true`);
+    if (color !== '#C4737F') options.push(`primaryColor: '${color}'`);
+    
+    const customCode = `&lt;!-- BeautyBot Widget --&gt;
+&lt;script&gt;
+  (function(w,d,s,o,f,js,fjs){
+    w['BeautyBot']=o;w[o]=w[o]||function(){(w[o].q=w[o].q||[]).push(arguments)};
+    js=d.createElement(s),fjs=d.getElementsByTagName(s)[0];
+    js.id=o;js.src=f;js.async=1;fjs.parentNode.insertBefore(js,fjs);
+  }(window,document,'script','bb','https://beautybot.pt/embed.js'));
+  bb('init', '${currentUserId}', {
+    ${options.join(',\n    ')}
+  });
+&lt;/script&gt;`;
+    
+    document.getElementById('custom-code').textContent = customCode;
+    document.getElementById('custom-code-preview').style.display = 'block';
+  } else {
+    document.getElementById('custom-code-preview').style.display = 'none';
+  }
+}
+
+// Test widget
+function testWidget() {
+  if (!currentUserId) {
+    alert('Erro: User ID não encontrado');
+    return;
+  }
+  
+  // Open in new window
+  window.open(`https://beautybot.pt/widget.html?userId=${currentUserId}`, 'beautybot-test', 'width=400,height=650');
+}
+
+// Initialize when dashboard loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initInstallation);
+} else {
+  initInstallation();
+}
+</script>
+
+ 
 </body>
 </html>
