@@ -1,4 +1,140 @@
+a// ============================================
+// BEAUTYBOT - CHAT API (SaaS with JSONB config)
+// Dynamic personalization per client
 // ============================================
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://cdhtcfvvxktouvusyosu.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkaHRjZnZ2eGt0b3V2dXN5b3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNzIyMDQsImV4cCI6MjA5MjY0ODIwNH0.V5iQaE5rwfvBNOpJZp4OMPqq4mPQc4t0KbSzBGMm5kY';
+
+export default async function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  
+    try {
+          const { messages, userId } = req.body;
+          if (!messages) return res.status(400).json({ error: 'Messages required' });
+          if (!userId) return res.status(400).json({ error: 'User ID required' });
+      
+          const apiKey = process.env.ANTHROPIC_API_KEY;
+          if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
+      
+          // Fetch chatbot configuration from Supabase
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('chatbot_config, clinic_name')
+            .eq('id', userId)
+            .single();
+      
+          if (profileError) {
+                  console.error('Profile fetch error:', profileError);
+          }
+      
+          // Extract config from JSONB field
+          const config = profile?.chatbot_config || {};
+          const clinicName = config.business_name || profile?.clinic_name || 'nossa clínica';
+          const botName = config.chatbot_name || 'Sofia';
+          const services = config.services || [
+                  'Harmonização facial',
+                  'Tratamentos faciais',
+                  'Skincare personalizado',
+                  'Depilação a laser',
+                  'Tratamentos corporais'
+                ];
+          const welcomeMsg = config.welcome_message || null;
+      
+          // Build dynamic system prompt
+          const systemPrompt = buildSystemPrompt(clinicName, botName, services, welcomeMsg);
+      
+          // Call Anthropic API
+          const response = await fetch('https://api.anthropic.com/v1/messages', {
+                  method: 'POST',
+                  headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': apiKey,
+                            'anthropic-version': '2023-06-01'
+                  },
+                  body: JSON.stringify({
+                            model: 'claude-sonnet-4-20250514',
+                            max_tokens: 1024,
+                            temperature: 0.7,
+                            system: systemPrompt,
+                            messages: messages
+                  })
+          });
+      
+          const data = await response.json();
+          return res.status(response.status).json(data);
+      
+    } catch (e) {
+          console.error('Chat API Error:', e);
+          return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+function buildSystemPrompt(clinicName, botName, services, welcomeMsg) {
+    const servicesList = Array.isArray(services) 
+      ? services.map(s => `- ${s}`).join('\n')
+          : services?.split(',').map(s => `- ${s.trim()}`).join('\n') || '- Tratamentos de estética';
+  
+    const customWelcome = welcomeMsg 
+      ? `\n**MENSAGEM PERSONALIZADA:**\n${welcomeMsg}\n` 
+          : '';
+  
+    return `# 🌸 Identidade do Assistente
+    
+    És **${botName}**, assistente virtual especializada em estética e bem-estar de **${clinicName}**.
+    
+    ## 🎯 Missão
+    Ajudar pessoas a descobrirem os melhores tratamentos para as suas necessidades, com empatia, conhecimento e profissionalismo.${customWelcome}
+    
+    ## 💬 Personalidade
+    - Tom: Caloroso, profissional e empático
+    - Estilo: Conversacional mas informado
+    - Valores: Autoestima, autocuidado
+    
+    ## 📋 Protocolo
+    
+    ### 1️⃣ PRIMEIRA INTERAÇÃO
+    - Cumprimento personalizado
+    - Apresentação: "Sou ${botName}, assistente de ${clinicName}"
+    - Perguntar nome
+    - Oferecer ajuda
+    
+    ### 2️⃣ DESCOBERTA
+    Perguntas abertas: objetivo, motivação, timing, experiência prévia
+    
+    ### 3️⃣ RECOMENDAÇÕES
+    1. Validar preocupação
+    2. Educar brevemente
+    3. Recomendar 1-2 opções
+    4. Explicar benefícios
+    5. Agendamento
+    
+    ## 🏭 Serviços de ${clinicName}
+    
+    ${servicesList}
+    
+    ## 💡 BOAS PRÁTICAS
+    - Linguagem natural
+    - 1-2 emojis subtis 🌸 ✨
+    - Empatia sempre
+    - Perguntas abertas
+    
+    ## 🚫 NUNCA
+    - Diagnósticos médicos
+    - Prometer resultados garantidos
+    - Pressionar agressivamente
+    
+    **Responde como ${botName} — natural, empática e profissional. 🌸**`;
+}// ============================================
 // BEAUTYBOT - OPTIMIZED CHAT API
 // Specialized AI for Beauty & Wellness
 // ============================================
