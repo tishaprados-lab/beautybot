@@ -1127,14 +1127,12 @@ function verificarMigracao() {
       const diff = Date.now() - new Date(maisRecente.data).getTime();
       const diasAtras = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-      if (confirm(`Foram encontrados dados de backup de ${diasAtras === 0 ? 'hoje' : `${diasAtras} dia(s) atrás`} (${maisRecente.config.nomeNegocio || 'configuração anterior'}).
-
-Desejas restaurar?`)) {
-        localStorage.setItem('beautybot_config', JSON.stringify(maisRecente.config));
-        mostrarToast('✓ Dados restaurados do backup!');
-        setTimeout(() => location.reload(), 1200);
+      // Verificar se utilizador já desativou popup
+      if (localStorage.getItem('dontShowBackupPrompt') === 'true') {
+        return;
       }
-    }
+      
+       }
   } catch(e) {
     console.warn('Verificação de migração falhou:', e);
   }
@@ -1551,6 +1549,10 @@ if (document.readyState === 'loading') {
 } else {
   initInstallation();
 }
+
+    // Mostrar modal com checkbox
+      mostrarBackupModal(maisRecente, diasAtras);
+ 
 </script>
 
  
